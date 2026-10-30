@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fitness Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#111315; --panel:#191c20; --panel2:#1f2328; --line:#2a2f36; --line2:#353b44;
+  --text:#eceef1; --text2:#b4bac3; --muted:#848b96;
+  --green:#3ecf8e; --green-bg:rgba(62,207,142,.12);
+  --blue:#5aa9ff; --blue-bg:rgba(90,169,255,.12);
+  --amber:#f5b83d; --amber-bg:rgba(245,184,61,.13);
+  --red:#f07178; --gray:#5f6672; --target:#8b929c;
+  --radius:16px; --gap:14px;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{padding-bottom:40px}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:rgba(17,19,21,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hbar{display:flex;align-items:center;gap:12px;padding:14px 0 10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.logo{width:34px;height:34px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,var(--green),var(--blue));display:grid;place-items:center;font-weight:700;color:#0d1012;font-size:13px;letter-spacing:-.5px}
+.brand h1{font-size:15px;letter-spacing:.14em;margin:0;font-weight:700}
+.brand small{display:block;color:var(--muted);font-size:11.5px;letter-spacing:.02em;font-weight:500}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:5px 10px;border-radius:7px;color:var(--text2);cursor:pointer;font-size:12.5px;font-weight:500}
+.seg button.on{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line2)}
+.custom{display:none;gap:6px;align-items:center}
+.custom.on{display:inline-flex}
+input[type=date],input[type=number],input[type=text],input[type=time],select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:6px 9px;color-scheme:dark;min-width:0}
+textarea{width:100%;font-family:var(--mono);font-size:12px}
+.iconbtn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:6px 10px;cursor:pointer;color:var(--text2)}
+.iconbtn:hover{color:var(--text)}
+nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px}
+nav::-webkit-scrollbar{display:none}
+nav button{border:0;background:none;color:var(--muted);padding:7px 12px;border-radius:9px;cursor:pointer;font-weight:500;white-space:nowrap}
+nav button.on{color:var(--text);background:var(--panel)}
+
+/* layout */
+main{padding-top:18px}
+section{display:block;scroll-margin-top:118px;padding-top:6px}
+section+section{margin-top:34px;border-top:1px solid var(--line);padding-top:26px}
+section::before{content:attr(data-title);display:block;font-size:20px;font-weight:700;letter-spacing:-.01em;margin:0 0 14px}
+.live{display:inline-flex;align-items:center;gap:5px}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(62,207,142,.18)}
+.live.stale i{background:var(--amber);box-shadow:0 0 0 3px rgba(245,184,61,.18)}
+.grid{display:grid;gap:var(--gap)}
+.kpis{grid-template-columns:repeat(auto-fill,minmax(178px,1fr))}
+.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr))}
+.three{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px 14px;min-width:0}
+.card h3{margin:0 0 2px;font-size:13px;font-weight:600;color:var(--text)}
+.card .sub{color:var(--muted);font-size:12px;margin:0 0 12px}
+.sectitle{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:26px 0 12px;flex-wrap:wrap}
+.sectitle h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600}
+.sectitle span{color:var(--muted);font-size:12px}
+.sectitle:first-child{margin-top:4px}
+
+/* KPI */
+.kpi{position:relative;overflow:hidden}
+.kpi .lbl{color:var(--muted);font-size:11.5px;font-weight:500;letter-spacing:.02em;display:flex;align-items:center;gap:6px}
+.kpi .val{font-size:26px;font-weight:650;letter-spacing:-.02em;margin:6px 0 2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi .val small{font-size:13px;color:var(--text2);font-weight:500;margin-left:3px}
+.kpi .val.na{font-size:17px;color:var(--text2);font-weight:550;white-space:normal;line-height:1.25;margin-top:9px}
+.kpi .foot{color:var(--text2);font-size:12px;min-height:17px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gray);display:inline-block;flex:none}
+.s-good .dot{background:var(--green)} .s-train .dot{background:var(--blue)} .s-warn .dot{background:var(--amber)}
+.bar{height:6px;background:var(--panel2);border-radius:6px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px;background:var(--gray)}
+.s-good .bar i{background:var(--green)} .s-train .bar i{background:var(--blue)} .s-warn .bar i{background:var(--amber)}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--panel2);color:var(--text2);white-space:nowrap}
+.tag.good{background:var(--green-bg);color:var(--green)} .tag.warn{background:var(--amber-bg);color:var(--amber)} .tag.train{background:var(--blue-bg);color:var(--blue)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:var(--gap)}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.hero .big{font-size:44px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05}
+.hero .big small{font-size:16px;color:var(--text2);font-weight:500}
+.track{position:relative;height:12px;background:var(--panel2);border-radius:12px;margin:18px 0 8px}
+.track i{position:absolute;left:0;top:0;bottom:0;border-radius:12px;background:linear-gradient(90deg,#2f9e6e,var(--green))}
+.track b{position:absolute;top:-5px;width:2px;height:22px;background:var(--text);border-radius:2px}
+.scale{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.wd{background:var(--panel2);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;color:var(--muted);border:1px solid transparent}
+.wd b{display:block;font-size:13px;color:var(--text);margin:2px 0 4px;font-weight:600}
+.wd.today{border-color:var(--line2)}
+.wd .st{height:5px;border-radius:5px;background:var(--line);margin:0 6px}
+.wd.done .st{background:var(--blue)} .wd.miss .st{background:var(--amber)} .wd.unl .st{background:repeating-linear-gradient(45deg,var(--amber) 0 3px,transparent 3px 6px)}
+.wd.plan .st{background:transparent;box-shadow:inset 0 0 0 1px var(--blue)}
+
+/* charts */
+.chart{position:relative;height:260px}
+.chart.sm{height:200px}
+.empty{display:grid;place-items:center;text-align:center;color:var(--text2);height:100%;min-height:160px;border:1px dashed var(--line2);border-radius:12px;padding:20px;font-size:13px}
+.empty b{display:block;color:var(--text);font-size:14px;margin-bottom:4px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin:-4px 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:3px;border-radius:2px;display:inline-block}
+.legend i.sq{height:10px;width:10px;border-radius:3px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--target) 0 4px,transparent 4px 7px)!important}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.tbl th{text-align:left;color:var(--muted);font-weight:500;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.n,.tbl th.n{text-align:right}
+.scroll{overflow-x:auto}
+.cap{max-height:340px;overflow:auto}
+.cap .tbl th{position:sticky;top:0;background:var(--panel);z-index:1}
+
+/* coach */
+.report h4{margin:16px 0 6px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.report ul{margin:0;padding-left:18px}
+.report li{margin:5px 0;color:var(--text2)}
+.report li b{color:var(--text);font-weight:600}
+.rec li::marker{color:var(--green)}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal div{aspect-ratio:1;border-radius:7px;background:var(--panel2);display:grid;place-items:center;font-size:11px;color:var(--muted)}
+.cal .ok{background:var(--green-bg);color:var(--green);box-shadow:inset 0 0 0 1px rgba(62,207,142,.4)}
+.cal .low{background:var(--amber-bg);color:var(--amber)}
+.cal .no{background:var(--amber-bg);color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.cal .pre{opacity:.35}
+.cal .hd{background:none;aspect-ratio:auto;font-weight:600}
+
+/* forms */
+.form{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+.form label{display:grid;gap:4px;font-size:11.5px;color:var(--muted)}
+.form .wide{grid-column:1/-1}
+.btn{border:0;border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer;background:var(--green);color:#0b1210}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.msg{font-size:12.5px;margin-top:8px;color:var(--text2);white-space:pre-wrap}
+.msg.ok{color:var(--green)} .msg.err{color:var(--amber)}
+
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+.banner{background:var(--amber-bg);color:var(--amber);border-radius:12px;padding:10px 14px;font-size:12.5px;margin-bottom:14px;display:none}
+.banner.on{display:block}
+#loading{display:grid;place-items:center;min-height:60vh;color:var(--muted)}
+.foot-meta{color:var(--muted);font-size:11.5px;margin-top:28px;text-align:center}
+@media (max-width:560px){
+  .kpi .val{font-size:22px} .hero .big{font-size:36px}
+  .brand h1{font-size:13px}
+  .chart{height:220px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (display-mode: standalone){header{padding-top:env(safe-area-inset-top)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="hbar">
+      <div class="brand"><img class="logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cdefs%3E%3ClinearGradient id='r' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%233ecf8e'/%3E%3Cstop offset='1' stop-color='%235aa9ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1024' height='1024' fill='%23161a1f'/%3E%3Ccircle cx='512' cy='512' r='330' fill='none' stroke='%23262b33' stroke-width='64'/%3E%3Ccircle cx='512' cy='512' r='330' fill='none' stroke='url(%23r)' stroke-width='64' stroke-linecap='round' stroke-dasharray='1617 2073' transform='rotate(-90 512 512)'/%3E%3Cg fill='%23eceef1'%3E%3Crect x='300' y='452' width='56' height='120' rx='16'/%3E%3Crect x='356' y='412' width='64' height='200' rx='18'/%3E%3Crect x='420' y='490' width='184' height='44' rx='14'/%3E%3Crect x='604' y='412' width='64' height='200' rx='18'/%3E%3Crect x='668' y='452' width='56' height='120' rx='16'/%3E%3C/g%3E%3C/svg%3E" alt=""><div><h1>FITNESS PROJECT</h1><small id="subtitle">Loading…</small></div></div>
+      <div class="controls">
+        <div class="seg" id="rangeSeg">
+          <button data-r="7">7D</button><button data-r="30" class="on">30D</button><button data-r="90">90D</button><button data-r="all">All</button><button data-r="custom">Custom</button>
+        </div>
+        <span class="custom" id="customBox"><input type="date" id="from"><span style="color:var(--muted)">–</span><input type="date" id="to"></span>
+        <button class="iconbtn" id="refresh" title="Reload data">↻</button>
+      </div>
+    </div>
+    <nav id="nav">
+      <button data-s="overview" class="on">Overview</button><button data-s="nutrition">Nutrition</button><button data-s="body">Body</button><button data-s="training">Training</button><button data-s="coach">Weekly report</button><button data-s="recovery">Supplements &amp; recovery</button><button data-s="log">Log data</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner" class="banner"></div>
+  <div id="loading">Loading your data…</div>
+
+  <!-- OVERVIEW -->
+  <section id="s-overview" data-title="Overview">
+    <div class="hero">
+      <div class="card" id="heroWeight"></div>
+      <div class="card" id="heroWeek"></div>
+    </div>
+    <div class="sectitle"><h2>Today</h2><span id="todayLbl"></span></div>
+    <div class="grid kpis" id="kpiToday"></div>
+    <div class="sectitle"><h2>Progress</h2><span id="rangeLbl1"></span></div>
+    <div class="grid kpis" id="kpiProgress"></div>
+  </section>
+
+  <!-- NUTRITION -->
+  <section id="s-nutrition" data-title="Nutrition">
+    <div class="sectitle"><h2>Selected range</h2>
+      <div class="seg" id="granSeg"><button data-g="daily" class="on">Daily</button><button data-g="weekly">Weekly</button><button data-g="monthly">Monthly</button></div>
+    </div>
+    <div class="grid kpis" id="kpiNut"></div>
+    <div class="grid two" style="margin-top:var(--gap)">
+      <div class="card"><h3>Calories vs target</h3><p class="sub" id="calSub"></p><div class="legend" id="calLeg"></div><div class="chart" id="cCal"></div></div>
+      <div class="card"><h3>Protein vs target</h3><p class="sub" id="protSub"></p><div class="legend" id="protLeg"></div><div class="chart" id="cProt"></div></div>
+      <div class="card"><h3>Surplus / deficit vs calorie target</h3><p class="sub">Intake minus the target in force that day. Days not logged are left blank.</p><div class="chart" id="cDiff"></div></div>
+      <div class="card"><h3>Weekly consistency</h3><p class="sub">Days logged, protein target hit, and calories within tolerance, per week (Sat–Fri)</p><div class="legend"><span><i class="sq" style="background:var(--gray)"></i>Days logged</span><span><i class="sq" style="background:var(--green)"></i>Protein hit</span><span><i class="sq" style="background:var(--blue)"></i>Calories on target</span></div><div class="chart" id="cCons"></div></div>
+    </div>
+    <div class="sectitle"><h2>Meal entries</h2><span><select id="mealDate"></select></span></div>
+    <div class="card" id="mealBox"></div>
+  </section>
+
+  <!-- BODY -->
+  <section id="s-body" data-title="Body transformation">
+    <div class="sectitle"><h2>Selected range</h2><span id="rangeLbl2"></span></div>
+    <div class="grid kpis" id="kpiBody"></div>
+    <div class="grid two" style="margin-top:var(--gap)">
+      <div class="card"><h3>Body weight</h3><p class="sub">Daily weigh-ins, 7-day rolling average and target</p><div class="legend"><span><i style="background:var(--text2)"></i>Weigh-in</span><span><i style="background:var(--green)"></i>7-day average</span><span><i class="dash"></i>Target 78 kg</span></div><div class="chart" id="cWeight"></div></div>
+      <div class="card"><h3>Rate of gain</h3><p class="sub">Weekly change in the 7-day average. Lean-gain band = 0.25–0.5% of body weight per week.</p><div class="chart" id="cRate"></div></div>
+    </div>
+    <div class="sectitle"><h2>Measurements</h2><span>Optional · waist, chest, arm, thigh, body fat</span></div>
+    <div class="card scroll" id="measBox"></div>
+  </section>
+
+  <!-- TRAINING -->
+  <section id="s-training" data-title="Training">
+    <div class="sectitle"><h2>Selected range</h2><span id="rangeLbl3"></span></div>
+    <div class="grid kpis" id="kpiTrain"></div>
+    <div class="grid two" style="margin-top:var(--gap)">
+      <div class="card"><h3>Sessions per week</h3><p class="sub">Per week (Sat–Fri). Any day counts toward the weekly target.</p><div class="legend"><span><i class="sq" style="background:var(--blue)"></i>Completed</span><span><i class="dash"></i>Weekly target</span></div><div class="chart" id="cWeeks"></div></div>
+      <div class="card"><h3>Session duration</h3><p class="sub">Minutes per session vs the 60-minute target</p><div class="chart" id="cDur"></div></div>
+      <div class="card"><h3>Training volume</h3><p class="sub">Working sets × reps × kg per session (cardio and warm-ups excluded)</p><div class="chart" id="cVol"></div></div>
+      <div class="card"><h3>Muscle-group distribution</h3><p class="sub">Working sets in the selected range</p><div class="chart" id="cMus"></div></div>
+    </div>
+    <div class="sectitle"><h2>Exercise progress</h2><span><select id="exSel"></select></span></div>
+    <div class="grid two">
+      <div class="card"><h3 id="exTitle">Exercise</h3><p class="sub">Top working set and estimated 1RM (Epley, sets of 1–12 reps). Each machine/equipment is tracked separately.</p><div class="legend"><span><i style="background:var(--blue)"></i>Top set (kg)</span><span><i style="background:var(--green)"></i>Estimated 1RM (kg)</span></div><div class="chart" id="cEx"></div></div>
+      <div class="card"><h3>Sets</h3><p class="sub">Every logged set for this exercise, newest first</p><div id="exSets" class="cap"></div></div>
+    </div>
+    <div class="sectitle"><h2>Personal records</h2><span>All time, per exercise + equipment</span></div>
+    <div class="card scroll" id="prBox"></div>
+    <div class="sectitle"><h2>Session log</h2><span>Every logged session, newest first</span></div>
+    <div class="card cap" id="sesBox"></div>
+  </section>
+
+  <!-- COACH -->
+  <section id="s-coach" data-title="Weekly coaching report">
+    <div class="sectitle"><h2>Week</h2><span><select id="weekSel"></select></span></div>
+    <div class="grid kpis" id="kpiWeek"></div>
+    <div class="card report" id="reportBox" style="margin-top:var(--gap)"></div>
+  </section>
+
+  <!-- RECOVERY -->
+  <section id="s-recovery" data-title="Supplements &amp; recovery">
+    <div class="sectitle"><h2>Supplements</h2><span id="rangeLbl4"></span></div>
+    <div class="grid kpis" id="kpiSup"></div>
+    <div class="grid two" style="margin-top:var(--gap)">
+      <div class="card"><h3>Creatine calendar</h3><p class="sub" id="crSub"></p><div id="crCal"></div><div class="legend" style="margin-top:12px"><span><i class="sq" style="background:var(--green)"></i>Target met</span><span><i class="sq" style="background:var(--amber)"></i>Below target / skipped</span><span><i class="sq" style="background:var(--panel2)"></i>Not logged</span></div></div>
+      <div class="card"><h3>Supplement log</h3><p class="sub">Selected range</p><div id="supBox" class="cap"></div></div>
+    </div>
+    <div class="sectitle"><h2>Recovery</h2><span id="ahStatus"></span></div>
+    <div class="grid kpis" id="kpiRec"></div>
+    <div class="grid two" style="margin-top:var(--gap)">
+      <div class="card"><h3>Sleep</h3><p class="sub">Hours per night, when logged</p><div class="chart sm" id="cSleep"></div></div>
+      <div class="card"><h3>Energy &amp; soreness</h3><p class="sub">Self-rated 1–5</p><div class="legend"><span><i style="background:var(--green)"></i>Energy</span><span><i style="background:var(--amber)"></i>Soreness</span></div><div class="chart sm" id="cFeel"></div></div>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section id="s-log" data-title="Log data">
+    <div class="banner on" id="logMode" style="background:var(--blue-bg);color:var(--blue)"></div>
+    <div class="grid two">
+      <div class="card"><h3>Weigh-in</h3><p class="sub">Best: morning, after the toilet, before food or drink</p>
+        <div class="form" data-f="body">
+          <label>Date<input type="date" name="date"></label><label>Time<input type="time" name="time"></label>
+          <label>Weight (kg)<input type="number" step="0.1" name="value"></label>
+          <label>Conditions<input type="text" name="conditions" placeholder="fasted"></label>
+          <div class="wide"><button class="btn">Save weigh-in</button><div class="msg"></div></div>
+        </div></div>
+      <div class="card"><h3>Food</h3><p class="sub">One entry per meal or item. Use “Whole day” only if you have just a daily total.</p>
+        <div class="form" data-f="nutrition">
+          <label>Date<input type="date" name="date"></label>
+          <label>Entry<select name="entry_level"><option value="meal">Meal / item</option><option value="day_total">Whole day total</option></select></label>
+          <label>Meal<select name="meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Shake</option><option>Other</option></select></label>
+          <label class="wide">Item<input type="text" name="item" placeholder="Chicken rice bowl"></label>
+          <label>kcal<input type="number" name="calories_kcal"></label><label>Protein g<input type="number" name="protein_g"></label>
+          <label>Quality<select name="data_quality"><option value="estimated">Estimated</option><option value="confirmed">Confirmed (label/weighed)</option></select></label>
+          <div class="wide"><button class="btn">Save food</button><div class="msg"></div></div>
+        </div></div>
+      <div class="card"><h3>Workout</h3><p class="sub">Session plus up to four sets of one exercise. Repeat for each exercise.</p>
+        <div class="form" data-f="workout">
+          <label>Date<input type="date" name="date"></label><label>Session<input type="text" name="session_name" value="Full body"></label>
+          <label>Status<select name="status"><option value="completed">Completed</option><option value="partial">Partial</option><option value="missed">Missed</option></select></label>
+          <label>Duration (min)<input type="number" name="duration_min"></label>
+          <label>Exercise<input type="text" name="exercise" list="exList" placeholder="Leg press"></label>
+          <label>Equipment<input type="text" name="equipment" placeholder="Machine / Barbell"></label>
+          <label>Muscle group<select name="muscle_group"><option value="">auto</option><option>Quads</option><option>Hamstrings</option><option>Glutes</option><option>Calves</option><option>Chest</option><option>Back</option><option>Shoulders</option><option>Biceps</option><option>Triceps</option><option>Forearms</option><option>Core</option><option>Cardio</option></select></label>
+          <label class="wide">Sets as kg×reps, comma separated<input type="text" name="sets" placeholder="60x10, 70x8, 70x8"></label>
+          <div class="wide"><button class="btn">Save workout</button><div class="msg"></div></div>
+        </div><datalist id="exList"></datalist></div>
+      <div class="card"><h3>Supplements &amp; recovery</h3><p class="sub">Leave anything you did not track empty</p>
+        <div class="form" data-f="daily">
+          <label>Date<input type="date" name="date"></label>
+          <label>Creatine (g)<input type="number" step="0.5" name="creatine"></label>
+          <label>Whey (scoops)<input type="number" step="0.5" name="whey"></label>
+          <label>Sleep (h)<input type="number" step="0.25" name="sleep_hours"></label>
+          <label>Energy 1–5<input type="number" min="1" max="5" name="energy_1to5"></label>
+          <label>Soreness 1–5<input type="number" min="1" max="5" name="soreness_1to5"></label>
+          <div class="wide"><button class="btn">Save</button><div class="msg"></div></div>
+        </div></div>
+    </div>
+    <div class="sectitle"><h2>Paste JSON from ChatGPT</h2><span>Fallback when the GPT Action is not set up</span></div>
+    <div class="card">
+      <textarea id="jsonIn" rows="8" placeholder='{"request_id":"2026-10-26-1","nutrition":[{"date":"2026-10-26","meal":"Lunch","item":"Chicken rice","calories_kcal":750,"protein_g":48,"data_quality":"estimated"}]}'></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px"><button class="btn" id="jsonBtn">Import JSON</button></div>
+      <div class="msg" id="jsonMsg"></div>
+    </div>
+    <div class="sectitle"><h2>Recent submissions</h2><span>Ingest_Log</span></div>
+    <div class="card cap" id="ingBox"></div>
+  </section>
+
+  <div class="foot-meta" id="meta"></div>
+</main>
+
+<script>
+(function(){
+'use strict';
+/* ============================================================ utilities */
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const num=v=>{if(v===undefined||v===null||v==='')return null;const n=typeof v==='number'?v:parseFloat(String(v).replace(/,/g,''));return isFinite(n)?n:null};
+const dObj=d=>{const p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]))};
+const addD=(d,n)=>{const o=dObj(d);o.setUTCDate(o.getUTCDate()+n);return o.toISOString().slice(0,10)};
+const dow=d=>DOW[dObj(d).getUTCDay()];
+const diffD=(a,b)=>Math.round((dObj(b)-dObj(a))/864e5);
+const fmtD=d=>{const o=dObj(d);return `${DOW[o.getUTCDay()]} ${o.getUTCDate()} ${MON[o.getUTCMonth()]}`};
+const fmtS=d=>{const o=dObj(d);return `${o.getUTCDate()} ${MON[o.getUTCMonth()]}`};
+const f0=n=>n===null||n===undefined?'—':Math.round(n).toLocaleString('en-US');
+const f1=n=>n===null||n===undefined?'—':(Math.round(n*10)/10).toFixed(1);
+const sgn=(n,f=f0)=>n===null?'—':(n>0?'+':n<0?'−':'±')+f(Math.abs(n));
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pct=(a,b)=>b?Math.round(a/b*100):null;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const weekStart=d=>{const k=dObj(d).getUTCDay();return addD(d,-((k-6+7)%7))}; // Saturday-start weeks
+const e1rm=(w,r)=>w>0&&r>=1&&r<=12?w*(1+r/30):null;
+const MUSCLE_GUESS=[[/leg press|squat|lunge|leg ext|hack|split squat|step.?up/i,'Quads'],[/leg curl|rdl|romanian|deadlift|good morning|nordic/i,'Hamstrings'],[/hip thrust|glute/i,'Glutes'],[/calf/i,'Calves'],[/bench|chest|fly|push.?up|dip|pec/i,'Chest'],[/row|pull.?down|pull.?up|chin|lat\b|back ext/i,'Back'],[/shoulder|overhead|military|lateral raise|rear delt|face pull|ohp/i,'Shoulders'],[/curl/i,'Biceps'],[/tricep|pushdown|skull|extension/i,'Triceps'],[/wrist|forearm|farmer|grip|carry|dead hang/i,'Forearms'],[/plank|crunch|ab\b|abs|core|leg raise/i,'Core'],[/walk|run|bike|cycle|row erg|cardio|treadmill|elliptical|stair/i,'Cardio']];
+const muscleOf=s=>{if(s.muscle_group)return s.muscle_group;for(const [re,m] of MUSCLE_GUESS)if(re.test(s.exercise||''))return m;return 'Other'};
+const LEGS=['Quads','Hamstrings','Glutes','Calves'];
+const normEquip=e=>String(e||'Unspecified').replace(/\s*\([^)]*\d\s*kg[^)]*\)/ig,'').trim()||'Unspecified';
+const ROT={A:'Upper + Forearms',B:'Legs + Core',C:'Full body + Athletic',D:'Arms, shoulders & calves'};
+const rotLetter=n=>{const m=String(n||'').match(/workout\s*([A-D])\b/i);return m?m[1].toUpperCase():null};
+
+/* ============================================================ state */
+let RAW=null, M=null;
+const S={range:'30',from:null,to:null,gran:'daily',section:'overview',exercise:null,week:null,mealDate:null};
+try{const p=JSON.parse(localStorage.getItem('kg78')||'{}');Object.assign(S,{range:p.range||S.range,gran:p.gran||S.gran,section:p.section||S.section,from:p.from||null,to:p.to||null})}catch(e){}
+const save=()=>{try{localStorage.setItem('kg78',JSON.stringify({range:S.range,gran:S.gran,section:S.section,from:S.from,to:S.to}))}catch(e){}};
+const IS_LIVE=!!(window.google&&google.script&&google.script.run);
+const KEY='__KG78_KEY__';
+const REMOTE=(!IS_LIVE&&window.__KG78_REMOTE&&window.__KG78_REMOTE.api)?window.__KG78_REMOTE:null;
+const CAN_SAVE=IS_LIVE||!!REMOTE;
+
+/* ============================================================ model */
+function buildModel(data){
+  const c=data.config||{};
+  const cfg={
+    start:num(c.start_weight_kg)??69, target:num(c.target_weight_kg)??78, height:num(c.height_cm),
+    programStart:String(c.program_start_date||'2026-10-24').slice(0,10),
+    trainDays:String(c.training_days||'Sat,Mon,Wed').split(',').map(s=>s.trim().slice(0,3)),
+    perWeek:num(c.sessions_per_week)??String(c.training_days||'Sat,Mon,Wed').split(',').length,
+    sessionTarget:num(c.session_minutes_target)??60, creatineTarget:num(c.creatine_target_g)??5,
+    creatineStart:String(c.creatine_start_date||'2026-10-26').slice(0,10),
+    tol:(num(c.calorie_tolerance_pct)??10)/100
+  };
+  const today=data.meta.today;
+  const targets=(data.targets||[]).map(t=>({from:String(t.effective_from).slice(0,10),kcal:num(t.calorie_target_kcal),prot:num(t.protein_target_g)})).sort((a,b)=>a.from<b.from?-1:1);
+  const targetOn=d=>{let t=targets[0]||{kcal:2650,prot:140};for(const x of targets)if(x.from<=d)t=x;return t};
+  const group=rows=>{const m={};(rows||[]).forEach(r=>{const d=String(r.date||'').slice(0,10);if(d)(m[d]=m[d]||[]).push(r)});return m};
+  const nut=group(data.nutrition), ses=group(data.sessions), sets=group(data.sets), sup=group(data.supplements), rec=group(data.recovery);
+  const body=(data.body||[]).map(r=>({...r,date:String(r.date).slice(0,10),value:num(r.value)})).filter(r=>r.value!==null);
+  const weighIns=body.filter(r=>r.metric==='weight').sort((a,b)=>(a.date+(a.time||''))<(b.date+(b.time||''))?-1:1);
+  const wByDate={};weighIns.forEach(r=>(wByDate[r.date]=wByDate[r.date]||[]).push(r.value));
+
+  function dayNut(d){
+    const e=nut[d];if(!e||!e.length)return null;
+    const tot=e.filter(x=>x.entry_level==='day_total').sort((a,b)=>String(a.logged_at)<String(b.logged_at)?-1:1);
+    const use=tot.length?[tot[tot.length-1]]:e;
+    let k=null,p=null,est=false;
+    use.forEach(x=>{const a=num(x.calories_kcal),b=num(x.protein_g);if(a!==null)k=(k||0)+a;if(b!==null)p=(p||0)+b;if(x.data_quality!=='confirmed')est=true});
+    return {kcal:k,prot:p,est,meals:e.filter(x=>x.entry_level!=='day_total'),hasTotal:!!tot.length};
+  }
+  const first=[cfg.programStart,...Object.keys(nut),...Object.keys(ses),...weighIns.map(w=>w.date)].sort()[0];
+  const days=[];
+  for(let d=first;d<=today;d=addD(d,1)){
+    const n=dayNut(d), t=targetOn(d), w=wByDate[d];
+    const s=(ses[d]||[]).slice().sort((a,b)=>({completed:0,partial:1,missed:2,rest:3}[a.status]??4)-({completed:0,partial:1,missed:2,rest:3}[b.status]??4))[0]||null;
+    const work=(sets[d]||[]).filter(x=>x.is_warmup!=='yes');
+    const cr=(sup[d]||[]).find(x=>String(x.supplement).toLowerCase()==='creatine');
+    const r=(rec[d]||[])[0]||null;
+    const planned=cfg.trainDays.includes(dow(d))&&d>=cfg.programStart;
+    let wstatus;
+    if(s&&(s.status==='completed'||s.status==='partial'))wstatus=s.status;
+    else if(s&&s.status==='missed')wstatus='missed';
+    else if(s&&s.status==='rest')wstatus='rest';
+    else wstatus='off';
+    const vol=work.reduce((a,x)=>{const w=num(x.weight_kg),rp=num(x.reps);return a+(w!==null&&rp!==null&&muscleOf(x)!=='Cardio'?w*rp:0)},0);
+    days.push({date:d,kcal:n?n.kcal:null,prot:n?n.prot:null,est:n?n.est:false,nut:n,kT:t.kcal,pT:t.prot,
+      weight:w?avg(w):null,planned,session:s,wstatus,minutes:s?num(s.duration_min):null,sets:work,vol,
+      creatine:cr?num(cr.amount):null,crRow:cr||null,rec:r});
+  }
+  const byDate={};days.forEach(x=>byDate[x.date]=x);
+  // rolling 7-day weight average (calendar window, weigh-in days only)
+  days.forEach((x,i)=>{const w=[];for(let j=Math.max(0,i-6);j<=i;j++)if(days[j].weight!==null)w.push(days[j].weight);x.w7=w.length?avg(w):null;x.w7n=w.length});
+  // nutrition 7-day averages (logged days only)
+  days.forEach((x,i)=>{const k=[],p=[];for(let j=Math.max(0,i-6);j<=i;j++){if(days[j].kcal!==null)k.push(days[j].kcal);if(days[j].prot!==null)p.push(days[j].prot)}x.k7=k.length?avg(k):null;x.p7=p.length?avg(p):null});
+
+  // exercises
+  const allSets=(data.sets||[]).map(s=>({...s,date:String(s.date).slice(0,10),w:num(s.weight_kg),r:num(s.reps),dur:num(s.duration_min),setNo:num(s.set_no),mg:muscleOf(s)}));
+  const exKey=s=>`${s.exercise} · ${normEquip(s.equipment)}`;
+  const ex={};allSets.forEach(s=>{const k=exKey(s);(ex[k]=ex[k]||{key:k,name:s.exercise,equip:normEquip(s.equipment),mg:s.mg,sets:[]}).sets.push(s)});
+  Object.values(ex).forEach(e=>{
+    e.sets.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.setNo||0)-(b.setNo||0));
+    const byD={};e.sets.filter(s=>s.is_warmup!=='yes').forEach(s=>(byD[s.date]=byD[s.date]||[]).push(s));
+    e.daily=Object.keys(byD).sort().map(d=>{const ss=byD[d];const ws=ss.filter(s=>s.w!==null);
+      const top=ws.length?Math.max(...ws.map(s=>s.w)):null;const e1=ws.map(s=>e1rm(s.w,s.r)).filter(x=>x!==null);
+      return {date:d,top,e1:e1.length?Math.max(...e1):null,vol:ws.reduce((a,s)=>a+(s.r!==null?s.w*s.r:0),0),reps:ss.reduce((a,s)=>a+(s.r||0),0),dur:ss.reduce((a,s)=>a+(s.dur||0),0)||null,n:ss.length}});
+    const ws=e.sets.filter(s=>s.is_warmup!=='yes'&&s.w!==null);
+    e.cardio=e.mg==='Cardio';
+    e.pr={
+      heaviest:ws.length?ws.reduce((a,s)=>s.w>a.w||(s.w===a.w&&(s.r||0)>(a.r||0))?s:a):null,
+      e1:ws.filter(s=>e1rm(s.w,s.r)).reduce((a,s)=>!a||e1rm(s.w,s.r)>e1rm(a.w,a.r)?s:a,null),
+      vol:e.daily.reduce((a,x)=>!a||x.vol>a.vol?x:a,null)
+    };
+  });
+  return {cfg,today,days,byDate,targetOn,weighIns,body,ex,allSets,data};
+}
+
+/* ============================================================ range */
+function rangeDays(){
+  const {days,today,cfg}=M;const firstD=days[0].date;
+  let from,to=today;
+  if(S.range==='all')from=firstD;
+  else if(S.range==='custom'){from=S.from||firstD;to=S.to||today}
+  else from=addD(today,-(+S.range-1));
+  if(from>to)[from,to]=[to,from];
+  if(from<firstD)from=firstD;
+  return {from,to,list:days.filter(x=>x.date>=from&&x.date<=to),label:`${fmtS(from)} – ${fmtS(to)}`};
+}
+
+/* ============================================================ charts */
+const charts={};
+const C={green:'#3ecf8e',blue:'#5aa9ff',amber:'#f5b83d',gray:'#5f6672',target:'#8b929c',text2:'#b4bac3',grid:'rgba(255,255,255,.06)',muted:'#848b96',line2:'#353b44'};
+if(window.Chart){
+  Chart.defaults.color=C.muted;Chart.defaults.font.family='Inter,system-ui,sans-serif';Chart.defaults.font.size=11;
+  Chart.defaults.borderColor=C.grid;Chart.defaults.plugins.legend.display=false;
+  Chart.defaults.plugins.tooltip.backgroundColor='#0b0d0f';Chart.defaults.plugins.tooltip.borderColor='#353b44';Chart.defaults.plugins.tooltip.borderWidth=1;
+  Chart.defaults.plugins.tooltip.padding=10;Chart.defaults.plugins.tooltip.titleColor='#eceef1';Chart.defaults.plugins.tooltip.bodyColor='#b4bac3';
+  Chart.defaults.plugins.tooltip.cornerRadius=8;Chart.defaults.maintainAspectRatio=false;
+}
+function chart(id,cfg){
+  const host=document.getElementById(id);
+  if(charts[id]){charts[id].destroy();delete charts[id]}
+  host.innerHTML='<canvas></canvas>';
+  if(!window.Chart){host.innerHTML='<div class="empty">Chart library failed to load. Check your connection.</div>';return}
+  cfg.options=Object.assign({responsive:true,interaction:{mode:'index',intersect:false},animation:false},cfg.options||{});
+  charts[id]=new Chart(host.querySelector('canvas'),cfg);
+}
+function empty(id,title,text){if(charts[id]){charts[id].destroy();delete charts[id]}document.getElementById(id).innerHTML=`<div class="empty"><div><b>${esc(title)}</b>${esc(text)}</div></div>`}
+const axis=(extra={})=>({grid:{color:C.grid,drawTicks:false},border:{display:false},ticks:{padding:6,maxRotation:0,autoSkipPadding:12},...extra});
+const xAxis=(extra={})=>({grid:{display:false},border:{color:C.line2},ticks:{maxRotation:0,autoSkipPadding:14},...extra});
+const barDS=(label,data,color,extra={})=>({type:'bar',label,data,backgroundColor:color,borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:28,categoryPercentage:.7,barPercentage:.9,...extra});
+const lineDS=(label,data,color,extra={})=>({type:'line',label,data,borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,spanGaps:true,...extra});
+const targetDS=(label,data)=>lineDS(label,data,C.target,{borderDash:[5,4],borderWidth:1.5,tension:0,stepped:'middle'});
+
+/* ============================================================ KPI */
+function kpi({label,value,unit,foot,status,bar,na}){
+  return `<div class="card kpi s-${status||'none'}"><div class="lbl"><span class="dot"></span>${esc(label)}</div>
+  <div class="val${na?' na':''}">${na?esc(value):esc(value)+(unit?`<small>${esc(unit)}</small>`:'')}</div>
+  <div class="foot">${foot||''}</div>${bar!==undefined&&bar!==null?`<div class="bar"><i style="width:${clamp(bar,0,100)}%"></i></div>`:''}</div>`;
+}
+
+/* ============================================================ shared metrics */
+function weightStats(){
+  const {weighIns,cfg,days}=M;
+  const latest=weighIns.length?weighIns[weighIns.length-1]:null;
+  const firstW=weighIns.length?weighIns[0]:null;
+  const span=weighIns.length?diffD(firstW.date,latest.date):0;
+  let slope=null;
+  if(weighIns.length>=3&&span>=7){
+    // least squares on last 28 days of weigh-ins (kg/day)
+    const cut=addD(latest.date,-27);const pts=weighIns.filter(w=>w.date>=cut).map(w=>[diffD(firstW.date,w.date),w.value]);
+    if(pts.length>=3){const mx=avg(pts.map(p=>p[0])),my=avg(pts.map(p=>p[1]));const sxx=pts.reduce((a,p)=>a+(p[0]-mx)**2,0);
+      if(sxx>0)slope=pts.reduce((a,p)=>a+(p[0]-mx)*(p[1]-my),0)/sxx}
+  }
+  const last7=[...days].reverse().find(d=>d.w7!==null);
+  const cur=last7?last7.w7:(latest?latest.value:null);
+  let eta=null,etaReason='';
+  if(weighIns.length<4||span<14)etaReason=`Needs ≥4 weigh-ins over ≥14 days (have ${weighIns.length}${weighIns.length?`, ${span} days`:''}).`;
+  else if(slope===null||slope<=0)etaReason='Weight is not trending up yet, so no date can be projected.';
+  else{const daysTo=(cfg.target-cur)/slope;if(daysTo<=0)eta={date:M.today,reached:true};else eta={date:addD(M.today,Math.round(daysTo)),weeks:daysTo/7}}
+  return {latest,firstW,span,slope,weekly:slope!==null?slope*7:null,cur,eta,etaReason};
+}
+const isDone=d=>d&&(d.wstatus==='completed'||d.wstatus==='partial');
+/* Weekly target: any N sessions in the Sat–Fri week count, whatever the day. */
+function weekInfo(wk){
+  const {cfg,today}=M;const end=addD(wk,6);
+  const ds=M.days.filter(d=>d.date>=wk&&d.date<=end);
+  const done=ds.filter(isDone).length;
+  const startEff=wk<cfg.programStart?cfg.programStart:wk;
+  const target=Math.max(1,Math.round(cfg.perWeek*Math.min(7,diffD(startEff,end)+1)/7));
+  const finished=end<today;
+  const daysLeft=finished?0:diffD(today,end)+(isDone(M.byDate[today])?0:1);
+  return {wk,end,done,target,finished,met:done>=target,daysLeft,left:Math.max(0,target-done)};
+}
+function workoutStats(list){
+  const done=list.filter(isDone);
+  const missed=list.filter(d=>d.wstatus==='missed').length;
+  const weeks=[...new Set(list.map(d=>weekStart(d.date)))].sort().map(weekInfo);
+  // finished weeks always count; the current week counts once its target is met (so an unfinished week never drags the % down)
+  const scored=weeks.filter(w=>w.finished||w.met);
+  const credit=scored.reduce((a,w)=>a+Math.min(w.done,w.target),0), denom=scored.reduce((a,w)=>a+w.target,0);
+  return {done:done.length,missed,weeks,weeksN:scored.length,weeksMet:scored.filter(w=>w.met).length,credit,denom,
+    extra:weeks.reduce((a,w)=>a+Math.max(0,w.done-w.target),0),
+    pct:denom?pct(credit,denom):null,mins:done.map(d=>d.minutes).filter(x=>x!==null)};
+}
+function streak(){
+  // consecutive weeks on target; the current week only adds once it is met
+  const weeks=[...new Set(M.days.map(d=>weekStart(d.date)))].sort().reverse();let n=0;
+  for(const wk of weeks){const w=weekInfo(wk);if(!w.finished&&!w.met)continue;if(w.met)n++;else break}
+  return n;
+}
+function nextWorkout(){
+  const ses=M.days.filter(isDone);const last=ses[ses.length-1];
+  const L=last?rotLetter(last.session?.session_name):null;
+  const nx=L?{A:'B',B:'C',C:'A',D:'A'}[L]:'A';
+  return {letter:nx,label:`Workout ${nx}`,desc:ROT[nx],last};
+}
+function nutStats(list){
+  const logged=list.filter(d=>d.kcal!==null||d.prot!==null);
+  const kc=logged.filter(d=>d.kcal!==null), pr=logged.filter(d=>d.prot!==null);
+  const tol=M.cfg.tol;
+  const protHit=pr.filter(d=>d.pT&&d.prot>=d.pT).length;
+  const calHit=kc.filter(d=>d.kT&&Math.abs(d.kcal-d.kT)<=d.kT*tol).length;
+  const both=logged.filter(d=>d.kcal!==null&&d.prot!==null&&d.prot>=d.pT&&Math.abs(d.kcal-d.kT)<=d.kT*tol).length;
+  const bothN=logged.filter(d=>d.kcal!==null&&d.prot!==null).length;
+  return {logged:logged.length,avgK:avg(kc.map(d=>d.kcal)),avgP:avg(pr.map(d=>d.prot)),avgDiff:avg(kc.map(d=>d.kcal-d.kT)),
+    avgPDiff:avg(pr.map(d=>d.prot-d.pT)),protHit,protN:pr.length,calHit,calN:kc.length,adh:bothN?pct(both,bothN):null,bothN,est:logged.filter(d=>d.est).length};
+}
+
+/* ============================================================ OVERVIEW */
+function renderOverview(){
+  const {cfg,today,byDate}=M;const ws=weightStats();const R=rangeDays();
+  $('#rangeLbl1').textContent=R.label;
+  // hero weight
+  const have=!!ws.latest, cur=have?ws.latest.value:null;
+  const gained=have?cur-cfg.start:null;
+  const prog=have?clamp((cur-cfg.start)/(cfg.target-cfg.start)*100,0,100):0;
+  $('#heroWeight').innerHTML=`
+    <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--green)"></span>Road to ${cfg.target} kg</div></div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px">
+      <div class="big">${have?f1(cur):'—'}<small> kg ${have?'latest':'· no weigh-in yet'}</small></div>
+      <div style="text-align:right;color:var(--text2);font-size:12.5px">${have?`${sgn(gained,f1)} kg since start · ${f1(cfg.target-cur)} kg to go<br>${fmtD(ws.latest.date)}${ws.latest.time?' '+esc(ws.latest.time):''}`:`Start ≈${cfg.start} kg (reported, unverified)<br>Log a weigh-in to start tracking`}</div>
+    </div>
+    <div class="track"><i style="width:${prog}%"></i>${have?`<b style="left:calc(${prog}% - 1px)"></b>`:''}</div>
+    <div class="scale"><span>${cfg.start} kg start</span><span>${have?Math.round(prog)+'% of the way':'0%'}</span><span>${cfg.target} kg target</span></div>
+    <p class="note">${ws.weekly!==null?`Trend: ${sgn(ws.weekly,f1)} kg/week · `:''}${ws.eta?(ws.eta.reached?'Target reached.':`Projected ${fmtD(ws.eta.date)} at the current trend.`):'Projection: not enough data yet. '+esc(ws.etaReason)}</p>`;
+  // this week
+  const wkStart=weekStart(today);const wk=[];for(let i=0;i<7;i++){const d=addD(wkStart,i);wk.push({d,x:byDate[d]})}
+  const WI=weekInfo(wkStart);const wkPlanned=WI.target;const wkDone=WI.done;
+  const wkNote=WI.met?`<b style="color:var(--green)">Weekly target hit</b>${WI.done>WI.target?` · ${WI.done-WI.target} extra`:''}`
+    :`${WI.left} more to hit ${WI.target} · ${WI.daysLeft} day${WI.daysLeft===1?'':'s'} left${WI.left>WI.daysLeft?' (not enough days left)':''}`;
+  $('#heroWeek').innerHTML=`<div class="kpi"><div class="lbl"><span class="dot" style="background:var(--blue)"></span>This week · ${fmtS(wkStart)} – ${fmtS(addD(wkStart,6))}</div>
+    <div class="val">${wkDone}<small>/ ${wkPlanned} workouts</small></div></div>
+    <div class="track" style="margin-top:6px"><i style="width:${clamp(pct(wkDone,wkPlanned),0,100)}%;background:var(--blue)"></i></div>
+    <div class="week">${wk.map(w=>{const x=w.x;
+      let cls='',t=w.d>today?'':'Rest';
+      if(x){if(isDone(x)){cls='done';t=x.minutes?x.minutes+' min':'Done'}else if(x.wstatus==='missed'){cls='miss';t='Missed'}}
+      if(w.d===today&&!isDone(x)){cls='plan';t='Today'}
+      return `<div class="wd ${cls} ${w.d===today?'today':''}" title="${fmtD(w.d)}${t?': '+t:''}">${dow(w.d)}<b>${dObj(w.d).getUTCDate()}</b><div class="st"></div><div style="margin-top:5px;font-size:10.5px">${t||'&nbsp;'}</div></div>`}).join('')}</div>
+    <p class="note">${wkNote} · any ${WI.target} days count · target ≤ ${cfg.sessionTarget} min each</p>`;
+
+  // today KPIs
+  const t=byDate[today]||{};const tg=M.targetOn(today);
+  const lastNut=[...M.days].reverse().find(d=>d.kcal!==null||d.prot!==null);
+  const lastNutTxt=lastNut&&lastNut.date!==today?`Last logged ${fmtD(lastNut.date)}: ${f0(lastNut.kcal)} kcal · ${f0(lastNut.prot)} g`:'';
+  $('#todayLbl').textContent=fmtD(today)+(M.today?'':'');
+  const kc=t.kcal??null, pr=t.prot??null;
+  const crStarted=today>=cfg.creatineStart;
+  const crToday=t.creatine??null;
+  const lastW=[...M.days].reverse().find(isDone);const NX=nextWorkout();
+  const lastWI=M.weighIns.length?M.weighIns[M.weighIns.length-1]:null;const wiAgo=lastWI?diffD(lastWI.date,today):null;
+  $('#kpiToday').innerHTML=[
+    kc===null?kpi({label:'Calories today',value:'Not logged yet',na:1,foot:esc(lastNutTxt),status:'none'})
+      :kpi({label:'Calories today',value:f0(kc),unit:`/ ${f0(tg.kcal)}`,foot:`${t.est?'<span class="tag">estimated</span> ':''}${pct(kc,tg.kcal)}% of target`,status:Math.abs(kc-tg.kcal)<=tg.kcal*cfg.tol?'good':'warn',bar:pct(kc,tg.kcal)}),
+    kc===null?kpi({label:'Calories remaining',value:f0(tg.kcal),unit:'kcal',foot:'Full target still open',status:'none'})
+      :kpi({label:'Calories remaining',value:f0(Math.max(0,tg.kcal-kc)),unit:'kcal',foot:kc>tg.kcal?`${f0(kc-tg.kcal)} over target`:'to reach target',status:kc>=tg.kcal*(1-cfg.tol)?'good':'warn'}),
+    pr===null?kpi({label:'Protein today',value:'Not logged yet',na:1,foot:'',status:'none'})
+      :kpi({label:'Protein today',value:f0(pr),unit:`/ ${f0(tg.prot)} g`,foot:`${pct(pr,tg.prot)}% of target`,status:pr>=tg.prot?'good':'warn',bar:pct(pr,tg.prot)}),
+    kpi({label:'Protein remaining',value:f0(Math.max(0,tg.prot-(pr||0))),unit:'g',foot:pr===null?'Full target still open':pr>=tg.prot?'Target reached':'to reach target',status:pr!==null&&pr>=tg.prot?'good':'none'}),
+    !crStarted?kpi({label:'Creatine',value:`Starts ${fmtD(cfg.creatineStart)}`,na:1,foot:`${cfg.creatineTarget} g daily`,status:'none'})
+      :crToday===null?kpi({label:'Creatine today',value:'Not logged yet',na:1,foot:`Target ${cfg.creatineTarget} g`,status:'warn'})
+      :kpi({label:'Creatine today',value:f1(crToday).replace('.0',''),unit:'g',foot:crToday>=cfg.creatineTarget?'Done':'Below target',status:crToday>=cfg.creatineTarget?'good':'warn'}),
+    kpi({label:'Next workout',value:NX.label,na:1,foot:`${esc(NX.desc)}${lastW?` · last: ${esc(lastW.session?.session_name||'Workout')}, ${fmtS(lastW.date)}`:''}`,status:'train'}),
+    kpi({label:'Last weigh-in',value:lastWI?(wiAgo===0?'Today':wiAgo===1?'Yesterday':`${wiAgo} days ago`):'None yet',na:1,foot:lastWI?`${f1(lastWI.value)} kg · ${fmtS(lastWI.date)}${wiAgo>=2?' · weigh in tomorrow morning':''}`:'Weigh in after waking, before food',status:!lastWI||wiAgo>=3?'warn':'good'})
+  ].join('');
+
+  // progress KPIs
+  const wsR=workoutStats(R.list);const ns=nutStats(R.list);
+  $('#kpiProgress').innerHTML=[
+    kpi({label:'Latest weight',value:have?f1(cur):'No weigh-in',na:!have,unit:'kg',foot:have?fmtD(ws.latest.date):`Start ≈${cfg.start} kg (reported)`,status:have?'good':'none'}),
+    kpi({label:'Target weight',value:cfg.target,unit:'kg',foot:have?`${f1(cfg.target-cur)} kg to go`:`≈${f1(cfg.target-cfg.start)} kg from start`,status:'none'}),
+    kpi({label:'Total gained',value:have?sgn(gained,f1):'—',unit:'kg',foot:have?`vs ≈${cfg.start} kg start`:'Needs a weigh-in',status:have&&gained>0?'good':'none'}),
+    kpi({label:'Progress to target',value:have?Math.round(prog):'—',unit:'%',status:have?'good':'none',bar:have?prog:0}),
+    kpi({label:'Workouts this week',value:`${wkDone}`,unit:`/ ${wkPlanned}`,foot:WI.met?'Target hit':`${WI.left} to go · ${WI.daysLeft} day${WI.daysLeft===1?'':'s'} left`,status:WI.met?'good':'train',bar:pct(wkDone,wkPlanned)}),
+    kpi({label:'Weekly target',value:wsR.pct??'—',unit:wsR.pct!==null?'%':'',foot:wsR.denom?`${wsR.credit} of ${wsR.denom} sessions · ${wsR.weeksMet}/${wsR.weeksN} week${wsR.weeksN===1?'':'s'} on target`:'Counts once a week is finished or its target is hit',status:wsR.pct===null?'none':wsR.pct>=80?'good':'warn',bar:wsR.pct}),
+    kpi({label:'Weekly streak',value:streak(),unit:streak()===1?'week':'weeks',foot:`Weeks in a row with ${M.cfg.perWeek}+ sessions`,status:'train'}),
+    kpi({label:'Nutrition adherence',value:ns.adh??'—',unit:ns.adh!==null?'%':'',foot:ns.bothN?`${ns.bothN} logged day${ns.bothN>1?'s':''} · protein ≥ target & kcal ±${Math.round(cfg.tol*100)}%`:'No days logged in range',status:ns.adh===null?'none':ns.adh>=70?'good':'warn',bar:ns.adh})
+  ].join('');
+}
+
+/* ============================================================ NUTRITION */
+function bucketize(list,gran){
+  if(gran==='daily')return list.map(d=>({label:fmtS(d.date),key:d.date,kcal:d.kcal,prot:d.prot,kT:d.kT,pT:d.pT,k7:d.k7,p7:d.p7,n:d.kcal!==null?1:0,est:d.est}));
+  const g={};list.forEach(d=>{const k=gran==='weekly'?weekStart(d.date):d.date.slice(0,7);(g[k]=g[k]||[]).push(d)});
+  return Object.keys(g).sort().map(k=>{const a=g[k];const kc=a.filter(x=>x.kcal!==null),pr=a.filter(x=>x.prot!==null);
+    return {label:gran==='weekly'?'Wk '+fmtS(k):MON[+k.slice(5,7)-1]+' '+k.slice(0,4),key:k,kcal:kc.length?avg(kc.map(x=>x.kcal)):null,prot:pr.length?avg(pr.map(x=>x.prot)):null,
+      kT:avg(a.map(x=>x.kT)),pT:avg(a.map(x=>x.pT)),n:kc.length,days:a.length}});
+}
+function renderNutrition(){
+  const R=rangeDays();const ns=nutStats(R.list);const cfg=M.cfg;
+  $$('#granSeg button').forEach(b=>b.classList.toggle('on',b.dataset.g===S.gran));
+  const tg=M.targetOn(M.today);
+  $('#kpiNut').innerHTML=[
+    kpi({label:'Avg calories',value:f0(ns.avgK),unit:'kcal',foot:ns.calN?`${ns.calN} logged day${ns.calN>1?'s':''} · target ${f0(tg.kcal)}`:'No days logged in range',status:ns.avgK===null?'none':Math.abs(ns.avgK-tg.kcal)<=tg.kcal*cfg.tol?'good':'warn',bar:ns.avgK!==null?pct(ns.avgK,tg.kcal):null}),
+    kpi({label:'Avg protein',value:f0(ns.avgP),unit:'g',foot:ns.protN?`target ${f0(tg.prot)} g`:'No days logged in range',status:ns.avgP===null?'none':ns.avgP>=tg.prot?'good':'warn',bar:ns.avgP!==null?pct(ns.avgP,tg.prot):null}),
+    kpi({label:'Avg vs calorie target',value:ns.avgDiff===null?'—':sgn(ns.avgDiff),unit:'kcal/day',foot:ns.avgDiff===null?'':ns.avgDiff<0?'Deficit vs target':'Surplus vs target',status:ns.avgDiff===null?'none':Math.abs(ns.avgDiff)<=tg.kcal*cfg.tol?'good':'warn'}),
+    kpi({label:'Protein target hit',value:ns.protN?`${ns.protHit}`:'—',unit:ns.protN?`/ ${ns.protN} days`:'',foot:ns.protN?pct(ns.protHit,ns.protN)+'% of logged days':'',status:ns.protN?(ns.protHit/ns.protN>=.7?'good':'warn'):'none',bar:ns.protN?pct(ns.protHit,ns.protN):null}),
+    kpi({label:'Nutrition adherence',value:ns.adh??'—',unit:ns.adh!==null?'%':'',foot:`Protein ≥ target and kcal within ±${Math.round(cfg.tol*100)}%`,status:ns.adh===null?'none':ns.adh>=70?'good':'warn',bar:ns.adh}),
+    kpi({label:'Days logged',value:ns.logged,unit:`/ ${R.list.length}`,foot:ns.est?`${ns.est} estimated`:'' ,status:'none',bar:pct(ns.logged,R.list.length)}),
+    (()=>{const ld=R.list.filter(d=>d.nut&&!d.nut.hasTotal&&d.kcal);const sn=ld.map(d=>d.nut.meals.filter(m=>/snack/i.test(m.meal)).reduce((a,m)=>a+(num(m.calories_kcal)||0),0));
+      const tot=ld.reduce((a,d)=>a+d.kcal,0),snT=sn.reduce((a,b)=>a+b,0);const sh=tot?Math.round(snT/tot*100):null;
+      return kpi({label:'Snacks',value:ld.length?f0(snT/ld.length):'—',unit:ld.length?'kcal/day':'',foot:sh!==null?`${sh}% of logged calories${sh>25?' · mostly late-night treats?':''}`:'Meal-level days only',status:sh===null?'none':sh>25?'warn':'good',bar:sh})})()
+  ].join('');
+  const B=bucketize(R.list,S.gran);const daily=S.gran==='daily';
+  const anyK=B.some(b=>b.kcal!==null), anyP=B.some(b=>b.prot!==null);
+  const unitTxt=daily?'Bars = logged days. Hatched days are not logged (not zero).':`Average of logged days per ${S.gran==='weekly'?'week':'month'}.`;
+  $('#calSub').textContent=unitTxt;$('#protSub').textContent=unitTxt;
+  const leg=(c,lab)=>`<span><i class="sq" style="background:${c}"></i>${lab}</span>`+(daily?`<span><i style="background:${C.text2}"></i>7-day average</span>`:'')+`<span><i class="dash"></i>Target</span>`;
+  $('#calLeg').innerHTML=leg(C.blue,daily?'Daily intake':'Average intake');
+  $('#protLeg').innerHTML=leg(C.green,daily?'Daily protein':'Average protein');
+  const tip=(unit)=>({callbacks:{label:c=>c.raw===null||c.raw===undefined?`${c.dataset.label}: not logged`:`${c.dataset.label}: ${f0(c.raw)} ${unit}`,afterBody:items=>{const b=B[items[0].dataIndex];return b&&b.est?'Estimated values':(!daily&&b?`${b.n} logged of ${b.days} days`:'')}}});
+  if(!anyK)empty('cCal','No calorie data in this range','Log meals or a day total to see this chart.');
+  else chart('cCal',{data:{labels:B.map(b=>b.label),datasets:[
+    barDS(daily?'Intake':'Avg intake',B.map(b=>b.kcal),B.map(b=>b.kcal!==null&&Math.abs(b.kcal-b.kT)<=b.kT*cfg.tol?C.blue:'rgba(90,169,255,.55)')),
+    ...(daily?[lineDS('7-day avg',B.map(b=>b.k7),C.text2,{borderWidth:1.5})]:[]),
+    targetDS('Target',B.map(b=>b.kT))]},options:{scales:{x:xAxis(),y:axis({beginAtZero:true})},plugins:{tooltip:tip('kcal')}}});
+  if(!anyP)empty('cProt','No protein data in this range','Log meals or a day total to see this chart.');
+  else chart('cProt',{data:{labels:B.map(b=>b.label),datasets:[
+    barDS(daily?'Protein':'Avg protein',B.map(b=>b.prot),B.map(b=>b.prot!==null&&b.prot>=b.pT?C.green:'rgba(62,207,142,.45)')),
+    ...(daily?[lineDS('7-day avg',B.map(b=>b.p7),C.text2,{borderWidth:1.5})]:[]),
+    targetDS('Target',B.map(b=>b.pT))]},options:{scales:{x:xAxis(),y:axis({beginAtZero:true})},plugins:{tooltip:tip('g')}}});
+  if(!anyK)empty('cDiff','No calorie data in this range','');
+  else chart('cDiff',{data:{labels:B.map(b=>b.label),datasets:[barDS('vs target',B.map(b=>b.kcal===null?null:b.kcal-b.kT),B.map(b=>b.kcal===null?C.gray:Math.abs(b.kcal-b.kT)<=b.kT*cfg.tol?C.green:C.amber),{borderRadius:4,borderSkipped:false})]},
+    options:{scales:{x:xAxis(),y:axis()},plugins:{tooltip:{callbacks:{label:c=>c.raw===null?'Not logged':`${sgn(c.raw)} kcal vs target`}}}}});
+  // weekly consistency
+  const wg={};R.list.forEach(d=>{const k=weekStart(d.date);(wg[k]=wg[k]||[]).push(d)});
+  const wks=Object.keys(wg).sort();
+  if(!R.list.some(d=>d.kcal!==null||d.prot!==null))empty('cCons','Nothing logged yet in this range','');
+  else chart('cCons',{type:'bar',data:{labels:wks.map(k=>'Wk '+fmtS(k)),datasets:[
+    barDS('Days logged',wks.map(k=>wg[k].filter(d=>d.kcal!==null||d.prot!==null).length),C.gray),
+    barDS('Protein hit',wks.map(k=>wg[k].filter(d=>d.prot!==null&&d.prot>=d.pT).length),C.green),
+    barDS('Calories on target',wks.map(k=>wg[k].filter(d=>d.kcal!==null&&Math.abs(d.kcal-d.kT)<=d.kT*cfg.tol).length),C.blue)]},
+    options:{scales:{x:xAxis(),y:axis({beginAtZero:true,max:7,ticks:{stepSize:1}})},plugins:{tooltip:{callbacks:{afterTitle:it=>`${wg[wks[it[0].dataIndex]].length} days in range`}}}}});
+  renderMeals();
+}
+function renderMeals(){
+  const logged=M.days.filter(d=>d.nut).map(d=>d.date).reverse();
+  const sel=$('#mealDate');
+  if(!logged.length){sel.innerHTML='<option>No days logged</option>';$('#mealBox').innerHTML='<div class="empty"><div><b>No food logged yet</b>Entries from ChatGPT or the Log tab will appear here.</div></div>';return}
+  if(!S.mealDate||!logged.includes(S.mealDate))S.mealDate=logged[0];
+  sel.innerHTML=logged.map(d=>`<option value="${d}" ${d===S.mealDate?'selected':''}>${fmtD(d)}</option>`).join('');
+  const d=M.byDate[S.mealDate];const n=d.nut;
+  const rows=n.meals.slice().sort((a,b)=>String(a.time||'99')<String(b.time||'99')?-1:1);
+  const total=(M.data.nutrition||[]).filter(x=>String(x.date).slice(0,10)===S.mealDate&&x.entry_level==='day_total').pop();
+  let html=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"><span class="tag train">${f0(n.kcal)} kcal</span><span class="tag good">${f0(n.prot)} g protein</span>${n.est?'<span class="tag warn">contains estimates</span>':'<span class="tag good">confirmed</span>'}${n.hasTotal?'<span class="tag">day total used</span>':''}</div>`;
+  if(rows.length){
+    html+=`<div class="scroll"><table class="tbl"><tr><th>Time</th><th>Meal</th><th>Item</th><th class="n">kcal</th><th class="n">Protein g</th><th class="n">Carbs g</th><th class="n">Fat g</th><th>Quality</th></tr>${rows.map(r=>`<tr><td>${esc(r.time||'—')}</td><td>${esc(r.meal)}</td><td>${esc(r.item||'')}${r.quantity?` <span style="color:var(--muted)">· ${esc(r.quantity)}</span>`:''}</td><td class="n">${f0(num(r.calories_kcal))}</td><td class="n">${f0(num(r.protein_g))}</td><td class="n">${f0(num(r.carbs_g))}</td><td class="n">${f0(num(r.fat_g))}</td><td>${r.data_quality==='confirmed'?'<span class="tag good">confirmed</span>':`<span class="tag warn">${esc(r.data_quality||'estimated')}</span>`}</td></tr>`).join('')}</table></div>`;
+    if(n.hasTotal)html+=`<p class="note">A day total also exists for this date, so the day total is what counts. Meal rows are shown for detail and are not added on top.</p>`;
+  }else{
+    html+=`<p style="color:var(--text2);margin:0">Only a daily total was logged for this day, so there is no meal-level breakdown.</p>`;
+  }
+  if(total&&total.notes)html+=`<p class="note">${esc(total.notes)}</p>`;
+  $('#mealBox').innerHTML=html;
+}
+
+/* ============================================================ BODY */
+function renderBody(){
+  const R=rangeDays();const ws=weightStats();const cfg=M.cfg;
+  $('#rangeLbl2').textContent=R.label;
+  const have=!!ws.latest;
+  const pctPerWk=ws.weekly!==null&&ws.cur?ws.weekly/ws.cur*100:null;
+  $('#kpiBody').innerHTML=[
+    kpi({label:'Starting weight',value:`≈${cfg.start}`,unit:'kg',foot:'Reported, not a confirmed weigh-in',status:'none'}),
+    kpi({label:'Latest weight',value:have?f1(ws.latest.value):'No weigh-in yet',na:!have,unit:'kg',foot:have?fmtD(ws.latest.date):'Log one in the Log tab or via ChatGPT',status:have?'good':'none'}),
+    kpi({label:'Total gained',value:have?sgn(ws.latest.value-cfg.start,f1):'—',unit:'kg',foot:have?`${f1(cfg.target-ws.latest.value)} kg to ${cfg.target}`:'',status:have?'good':'none',bar:have?clamp((ws.latest.value-cfg.start)/(cfg.target-cfg.start)*100,0,100):null}),
+    kpi({label:'7-day average',value:ws.cur!==null&&ws.firstW?f1(ws.cur):'—',unit:'kg',foot:ws.firstW?'Smooths daily water swings':'Not enough data yet',status:'none'}),
+    kpi({label:'Weekly rate of gain',value:ws.weekly!==null?sgn(ws.weekly,f1):'Not enough data yet',na:ws.weekly===null,unit:'kg/wk',
+      foot:ws.weekly!==null?`${pctPerWk.toFixed(2)}% of body weight/week`:'Needs ≥3 weigh-ins over ≥7 days',
+      status:ws.weekly===null?'none':(pctPerWk>=0.2&&pctPerWk<=0.55)?'good':'warn'}),
+    kpi({label:'Estimated target date',value:ws.eta?(ws.eta.reached?'Reached':fmtD(ws.eta.date)):'Not enough data yet',na:1,foot:ws.eta&&!ws.eta.reached?`≈${Math.round(ws.eta.weeks)} weeks at current trend`:esc(ws.etaReason),status:ws.eta?'good':'none'})
+  ].join('');
+  const list=R.list;
+  if(!list.some(d=>d.weight!==null))empty('cWeight','No weigh-ins in this range','The ≈69 kg start is a reported figure, so it is not plotted as a measurement. Log morning weigh-ins 3–7× a week.');
+  else chart('cWeight',{data:{labels:list.map(d=>fmtS(d.date)),datasets:[
+    lineDS('Weigh-in',list.map(d=>d.weight),C.text2,{showLine:false,pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#111315',pointBorderColor:C.text2,pointBorderWidth:2}),
+    lineDS('7-day avg',list.map(d=>d.w7),C.green),
+    targetDS('Target',list.map(()=>cfg.target))]},
+    options:{scales:{x:xAxis(),y:axis({suggestedMin:Math.min(cfg.start,...list.filter(d=>d.weight!==null).map(d=>d.weight))-1,suggestedMax:cfg.target+0.5})},plugins:{tooltip:{callbacks:{label:c=>c.raw===null?null:`${c.dataset.label}: ${f1(c.raw)} kg`}}}}});
+  // weekly rate from 7-day avg at week ends
+  const wg={};M.days.forEach(d=>{if(d.w7!==null)wg[weekStart(d.date)]=d.w7});
+  const wk=Object.keys(wg).sort().filter(k=>k>=weekStart(R.from)&&k<=R.to);const rates=[];
+  for(let i=1;i<wk.length;i++)rates.push({k:wk[i],v:wg[wk[i]]-wg[wk[i-1]]});
+  if(rates.length<1)empty('cRate','Not enough data yet','Needs weigh-ins across at least two weeks.');
+  else{const lo=(ws.cur||cfg.start)*0.0025,hi=(ws.cur||cfg.start)*0.005;
+    chart('cRate',{data:{labels:rates.map(r=>'Wk '+fmtS(r.k)),datasets:[barDS('Weekly change',rates.map(r=>r.v),rates.map(r=>r.v>=lo&&r.v<=hi?C.green:C.amber),{borderRadius:4,borderSkipped:false}),
+      targetDS('Band low',rates.map(()=>lo)),targetDS('Band high',rates.map(()=>hi))]},
+      options:{scales:{x:xAxis(),y:axis()},plugins:{tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${sgn(c.raw,x=>x.toFixed(2))} kg`}}}}})}
+  // measurements
+  const mets=['waist','chest','arm','thigh','body_fat'];const lab={waist:'Waist',chest:'Chest',arm:'Arm',thigh:'Thigh',body_fat:'Body fat'};
+  const rows=mets.map(m=>{const r=M.body.filter(x=>x.metric===m).sort((a,b)=>a.date<b.date?-1:1);return {m,first:r[0],last:r[r.length-1],n:r.length}});
+  if(!rows.some(r=>r.n))$('#measBox').innerHTML='<div class="empty"><div><b>No measurements logged yet</b>Optional. Measuring waist and arm every 2–4 weeks shows whether gain is mostly lean (arm/thigh up, waist steady).</div></div>';
+  else $('#measBox').innerHTML=`<table class="tbl"><tr><th>Measurement</th><th class="n">First</th><th class="n">Latest</th><th class="n">Change</th><th>Latest date</th><th class="n">Entries</th></tr>${rows.map(r=>{const u=r.m==='body_fat'?'%':'cm';return r.n?`<tr><td>${lab[r.m]}</td><td class="n">${f1(r.first.value)} ${u}</td><td class="n">${f1(r.last.value)} ${u}</td><td class="n">${sgn(r.last.value-r.first.value,f1)}</td><td>${fmtD(r.last.date)}</td><td class="n">${r.n}</td></tr>`:`<tr><td>${lab[r.m]}</td><td colspan="5" style="color:var(--muted)">Not logged</td></tr>`}).join('')}</table>`;
+}
+
+/* ============================================================ TRAINING */
+function renderTraining(){
+  const R=rangeDays();const st=workoutStats(R.list);const cfg=M.cfg;
+  $('#rangeLbl3').textContent=R.label;
+  const done=R.list.filter(d=>d.wstatus==='completed'||d.wstatus==='partial');
+  const workSets=done.flatMap(d=>d.sets).filter(s=>muscleOf(s)!=='Cardio');
+  const vol=done.reduce((a,d)=>a+d.vol,0);
+  const avgMin=avg(st.mins);
+  $('#kpiTrain').innerHTML=[
+    kpi({label:'Sessions completed',value:st.done,foot:st.extra?`incl. ${st.extra} above target`:'' ,status:'train'}),
+    kpi({label:'Weekly target',value:st.pct??'—',unit:st.pct!==null?'%':'',foot:st.denom?`${st.credit} of ${st.denom} sessions (${cfg.perWeek}/week)`:'Counts once a week is finished or its target is hit',status:st.pct===null?'none':st.pct>=80?'good':'warn',bar:st.pct}),
+    kpi({label:'Weeks on target',value:`${st.weeksMet}`,unit:`/ ${st.weeksN}`,foot:`${streak()} in a row`,status:st.weeksN&&st.weeksMet===st.weeksN?'good':st.weeksN?'warn':'none'}),
+    kpi({label:'Avg session',value:avgMin!==null?Math.round(avgMin):'—',unit:'min',foot:`Target ≤ ${cfg.sessionTarget} min`,status:avgMin===null?'none':avgMin<=cfg.sessionTarget?'good':'warn',bar:avgMin!==null?pct(avgMin,cfg.sessionTarget):null}),
+    kpi({label:'Working sets',value:workSets.length,foot:'Strength sets, warm-ups excluded',status:'train'}),
+    kpi({label:'Total volume',value:f0(vol),unit:'kg',foot:'Sets with weight and reps only',status:'train'})
+  ].join('');
+  // weeks
+  const wg={};R.list.forEach(d=>{const k=weekStart(d.date);(wg[k]=wg[k]||[]).push(d)});const wks=Object.keys(wg).sort();
+  const WK=wks.map(weekInfo);
+  chart('cWeeks',{data:{labels:wks.map(k=>'Wk '+fmtS(k)),datasets:[
+    barDS('Completed',WK.map(w=>w.done),WK.map(w=>w.met?C.green:w.finished?C.amber:C.blue)),
+    targetDS('Target',WK.map(w=>w.target))]},
+    options:{scales:{x:xAxis(),y:axis({beginAtZero:true,ticks:{stepSize:1},suggestedMax:cfg.perWeek+1})},plugins:{tooltip:{callbacks:{afterBody:it=>{const w=WK[it[0].dataIndex];return w.met?'Target hit':w.finished?`${w.left} short`:`${w.left} to go · ${w.daysLeft} days left`}}}}}});
+  if(!done.length){['cDur','cVol','cMus'].forEach(id=>empty(id,'No sessions in this range',''))}
+  else{
+    chart('cDur',{data:{labels:done.map(d=>fmtS(d.date)),datasets:[barDS('Duration',done.map(d=>d.minutes),done.map(d=>d.minutes!==null&&d.minutes<=cfg.sessionTarget?C.blue:C.amber)),targetDS(`Target ${cfg.sessionTarget} min`,done.map(()=>cfg.sessionTarget))]},
+      options:{scales:{x:xAxis(),y:axis({beginAtZero:true})},plugins:{tooltip:{callbacks:{label:c=>c.raw===null?'Not logged':`${c.dataset.label}: ${c.raw} min`}}}}});
+    chart('cVol',{data:{labels:done.map(d=>fmtS(d.date)),datasets:[barDS('Volume',done.map(d=>d.vol||null),C.blue)]},
+      options:{scales:{x:xAxis(),y:axis({beginAtZero:true})},plugins:{tooltip:{callbacks:{label:c=>`${f0(c.raw)} kg · ${done[c.dataIndex].sets.filter(s=>muscleOf(s)!=='Cardio').length} sets`}}}}});
+    const mg={};done.flatMap(d=>d.sets).forEach(s=>{const m=muscleOf(s);mg[m]=(mg[m]||0)+1});
+    const order=['Quads','Hamstrings','Glutes','Calves','Chest','Back','Shoulders','Biceps','Triceps','Forearms','Core','Cardio','Other'].filter(m=>mg[m]);
+    chart('cMus',{type:'bar',data:{labels:order,datasets:[barDS('Sets',order.map(m=>mg[m]),order.map(m=>LEGS.includes(m)?C.green:m==='Cardio'?C.gray:C.blue),{borderRadius:{topRight:4,bottomRight:4},borderSkipped:'left',maxBarThickness:18})]},
+      options:{indexAxis:'y',scales:{x:axis({beginAtZero:true,ticks:{stepSize:1}}),y:xAxis({grid:{display:false}})},plugins:{tooltip:{callbacks:{label:c=>`${c.raw} set${c.raw>1?'s':''}`}}}}});
+  }
+  // exercise selector
+  const exs=Object.values(M.ex).sort((a,b)=>a.name<b.name?-1:1);
+  const sel=$('#exSel');
+  if(!exs.length){sel.innerHTML='<option>No exercises yet</option>';empty('cEx','No exercises logged','');$('#exSets').innerHTML='';}
+  else{
+    const withW=exs.filter(e=>e.sets.some(s=>s.w!==null));
+    if(!S.exercise||!M.ex[S.exercise])S.exercise=(withW[0]||exs[0]).key;
+    sel.innerHTML=exs.map(e=>`<option value="${esc(e.key)}" ${e.key===S.exercise?'selected':''}>${esc(e.key)}</option>`).join('');
+    const e=M.ex[S.exercise];$('#exTitle').textContent=e.key;
+    const dd=e.daily;
+    if(e.cardio){chart('cEx',{data:{labels:dd.map(x=>fmtS(x.date)),datasets:[barDS('Minutes',dd.map(x=>x.dur),C.blue)]},options:{scales:{x:xAxis(),y:axis({beginAtZero:true})}}})}
+    else if(!dd.some(x=>x.top!==null))empty('cEx','No weights logged for this exercise','Add kg × reps for each set to track progress.');
+    else chart('cEx',{data:{labels:dd.map(x=>fmtS(x.date)),datasets:[
+      lineDS('Top set',dd.map(x=>x.top),C.blue,{pointRadius:4,pointBackgroundColor:'#111315',pointBorderWidth:2}),
+      lineDS('Est. 1RM',dd.map(x=>x.e1),C.green,{pointRadius:4,pointBackgroundColor:'#111315',pointBorderWidth:2})]},
+      options:{scales:{x:xAxis(),y:axis({grace:'15%'})},plugins:{tooltip:{callbacks:{label:c=>c.raw===null?null:`${c.dataset.label}: ${f1(c.raw)} kg`}}}}});
+    $('#exSets').innerHTML=`<table class="tbl"><tr><th>Date</th><th class="n">Set</th><th class="n">kg</th><th class="n">Reps</th><th class="n">Min</th><th class="n">e1RM</th><th>Notes</th></tr>${e.sets.slice().reverse().map(s=>`<tr><td>${fmtS(s.date)}</td><td class="n">${s.setNo??'—'}${s.is_warmup==='yes'?' w':''}</td><td class="n">${s.w??'—'}</td><td class="n">${s.r??'—'}</td><td class="n">${s.dur??''}</td><td class="n">${e1rm(s.w,s.r)?f1(e1rm(s.w,s.r)):''}</td><td style="color:var(--muted)">${esc(s.notes||'')}</td></tr>`).join('')}</table>`;
+    $('#exList').innerHTML=exs.map(e=>`<option value="${esc(e.name)}">`).join('');
+  }
+  // PRs
+  const prs=exs.filter(e=>!e.cardio);
+  $('#prBox').innerHTML=prs.length?`<table class="tbl"><tr><th>Exercise</th><th>Equipment</th><th>Muscle</th><th class="n">Heaviest set</th><th class="n">Best e1RM</th><th class="n">Best session volume</th><th>Sessions</th></tr>${prs.map(e=>{const h=e.pr.heaviest,b=e.pr.e1,v=e.pr.vol;
+    return `<tr><td>${esc(e.name)}</td><td>${esc(e.equip)}</td><td>${esc(e.mg)}</td><td class="n">${h?`${h.w} kg × ${h.r??'?'} <span style="color:var(--muted)">${fmtS(h.date)}</span>`:'<span style="color:var(--muted)">not logged</span>'}</td><td class="n">${b?f1(e1rm(b.w,b.r))+' kg':'—'}</td><td class="n">${v&&v.vol?f0(v.vol)+' kg':'—'}</td><td>${e.daily.length}</td></tr>`}).join('')}</table><p class="note">PRs compare only sets on the same exercise and equipment. Machine weights differ between machines and gyms.</p>`:'<div class="empty">No strength sets logged yet.</div>';
+  // session log
+  const log=R.list.filter(d=>d.session).slice().reverse();
+  const stTag=d=>({completed:'<span class="tag train">completed</span>',partial:'<span class="tag train">partial</span>',missed:'<span class="tag warn">missed</span>',rest:'<span class="tag">rest</span>'}[d.wstatus]||'');
+  $('#sesBox').innerHTML=log.length?`<table class="tbl"><tr><th>Date</th><th>Status</th><th>Session</th><th class="n">Min</th><th>Exercises</th><th>Notes</th></tr>${log.map(d=>{const exn=[...new Set(d.sets.map(s=>s.exercise))];
+    return `<tr><td>${fmtD(d.date)}</td><td>${stTag(d)}</td><td>${esc(d.session?.session_name||'')}</td><td class="n">${d.minutes!==null?`<span style="color:${d.minutes>cfg.sessionTarget?'var(--amber)':'inherit'}">${d.minutes}</span>`:'—'}</td><td>${esc(exn.join(', '))}</td><td style="color:var(--muted)">${esc(d.session?.notes||'')}</td></tr>`}).join('')}</table>`:'<div class="empty">No sessions logged in this range.</div>';
+}
+
+/* ============================================================ COACH */
+function weekReport(wk){
+  const cfg=M.cfg;const end=addD(wk,6);const list=M.days.filter(d=>d.date>=wk&&d.date<=end);
+  const prevList=M.days.filter(d=>d.date>=addD(wk,-7)&&d.date<wk);
+  const ns=nutStats(list), st=workoutStats(list);const WI=weekInfo(wk);const tg=M.targetOn(end>M.today?M.today:end);
+  const w=M.weighIns.filter(x=>x.date>=wk&&x.date<=end);
+  const prevW=M.weighIns.filter(x=>x.date<wk);
+  const elapsed=list.length;
+  const out={kpis:[],sections:[]};
+  out.kpis=[
+    kpi({label:'Avg calories',value:f0(ns.avgK),unit:'kcal',foot:`${ns.calN} of ${elapsed} days logged`,status:ns.avgK===null?'none':Math.abs(ns.avgK-tg.kcal)<=tg.kcal*cfg.tol?'good':'warn'}),
+    kpi({label:'Avg protein',value:f0(ns.avgP),unit:'g',foot:`target ${tg.prot} g`,status:ns.avgP===null?'none':ns.avgP>=tg.prot?'good':'warn'}),
+    kpi({label:'Workouts',value:WI.done,unit:`/ ${WI.target} target`,foot:WI.met?'Target hit':WI.finished?`${WI.left} short`:`${WI.left} to go`,status:WI.met?'good':WI.finished?'warn':'train',bar:pct(WI.done,WI.target)}),
+    kpi({label:'Weight change',value:w.length>=2?sgn(w[w.length-1].value-w[0].value,f1):'—',unit:w.length>=2?'kg':'',foot:w.length?`${w.length} weigh-in${w.length>1?'s':''}`:'No weigh-ins this week',status:'none'})
+  ].join('');
+  const L=(t)=>`<li>${t}</li>`;const facts=[],good=[],improve=[],recov=[],recs=[];
+  // nutrition
+  if(ns.logged===0)facts.push('No nutrition logged this week, so intake is unknown (not treated as zero).');
+  else{
+    facts.push(`Calories averaged <b>${f0(ns.avgK)} kcal</b> on ${ns.calN} logged day${ns.calN>1?'s':''} (target ${f0(tg.kcal)}, ${sgn(ns.avgDiff)} kcal/day).`);
+    facts.push(`Protein averaged <b>${f0(ns.avgP)} g</b>, hitting the ${tg.prot} g target on ${ns.protHit} of ${ns.protN} day${ns.protN>1?'s':''}.`);
+    if(ns.est)facts.push(ns.est===ns.logged?'All logged nutrition this week is estimated, so treat the averages as approximate.':`${ns.est} of ${ns.logged} logged days are estimates, so treat the averages as approximate.`);
+  }
+  // weight
+  if(w.length>=2)facts.push(`Weight moved <b>${sgn(w[w.length-1].value-w[0].value,f1)} kg</b> (${f1(w[0].value)} → ${f1(w[w.length-1].value)} kg) across ${w.length} weigh-ins.`);
+  else if(w.length===1)facts.push(`One weigh-in: <b>${f1(w[0].value)} kg</b> on ${fmtD(w[0].date)}. Two or more are needed to see a change.`);
+  else facts.push('No weigh-ins this week.');
+  // training
+  facts.push(`Training: <b>${WI.done} of ${WI.target}</b> sessions for the week${WI.done>WI.target?` (${WI.done-WI.target} extra)`:''}${WI.finished||WI.met?'':`, ${WI.left} to go with ${WI.daysLeft} day${WI.daysLeft===1?'':'s'} left`}${st.missed?`, ${st.missed} logged as missed`:''}.`);
+  const mins=list.filter(d=>d.minutes!==null&&(d.wstatus==='completed'||d.wstatus==='partial')).map(d=>d.minutes);
+  if(mins.length)facts.push(`Session length averaged <b>${Math.round(avg(mins))} min</b> (target ≤ ${cfg.sessionTarget}).`);
+
+  // strongest exercises: e1RM vs previous best before this week
+  const perf=[];
+  Object.values(M.ex).filter(e=>!e.cardio).forEach(e=>{
+    const thisW=e.daily.filter(x=>x.date>=wk&&x.date<=end&&x.e1!==null);if(!thisW.length)return;
+    const best=Math.max(...thisW.map(x=>x.e1));const prev=e.daily.filter(x=>x.date<wk&&x.e1!==null);
+    if(!prev.length)perf.push({e,best,first:true});else{const pb=Math.max(...prev.map(x=>x.e1));perf.push({e,best,delta:best-pb,pct:(best-pb)/pb*100})}
+  });
+  perf.filter(p=>!p.first).sort((a,b)=>b.pct-a.pct).slice(0,3).forEach(p=>{if(p.delta>0)good.push(`<b>${esc(p.e.key)}</b>: estimated 1RM up ${f1(p.delta)} kg (${p.pct.toFixed(1)}%) vs previous best.`)});
+  const firsts=perf.filter(p=>p.first);
+  if(firsts.length)good.push(`Baselines set for ${firsts.map(p=>`<b>${esc(p.e.name)}</b> (${f1(p.best)} kg e1RM)`).join(', ')}. Next week, beat these by a rep or a small weight increase.`);
+  if(ns.protN&&ns.protHit===ns.protN)good.push('Protein target hit on every logged day.');
+  if(WI.met)good.push(`Weekly target hit: ${WI.done} sessions${WI.done>WI.target?', more than planned':''}.`);
+  if(!WI.met&&WI.finished)improve.push(`Only ${WI.done} of ${WI.target} sessions this week.`);
+  // areas to improve
+  if(ns.avgP!==null&&ns.avgP<tg.prot)improve.push(`Protein is <b>${f0(tg.prot-ns.avgP)} g/day short</b> of target on average.`);
+  if(ns.avgK!==null&&ns.avgK<tg.kcal*(1-cfg.tol))improve.push(`Calories are <b>${f0(tg.kcal-ns.avgK)} kcal/day below</b> target. A sustained shortfall makes gaining weight unlikely.`);
+  if(mins.some(m=>m>cfg.sessionTarget))improve.push(`${mins.filter(m=>m>cfg.sessionTarget).length} session${mins.filter(m=>m>cfg.sessionTarget).length>1?'s':''} ran over ${cfg.sessionTarget} min.`);
+  const mg={};list.flatMap(d=>d.sets).forEach(s=>{const m=muscleOf(s);mg[m]=(mg[m]||0)+1});
+  const legSets=LEGS.reduce((a,m)=>a+(mg[m]||0),0), upSets=['Chest','Back','Shoulders','Biceps','Triceps'].reduce((a,m)=>a+(mg[m]||0),0);
+  if(st.done&&legSets<upSets)improve.push(`Legs got <b>${legSets}</b> working set${legSets===1?'':'s'} vs ${upSets} for upper body, even though legs are a priority.`);
+  if(st.done&&!mg.Forearms)improve.push('No direct forearm work logged, even though forearms are a priority.');
+  if(st.done&&!(mg.Back))improve.push('No back (pulling) work logged. Balance pushing and pulling for a balanced upper body.');
+  const unknownLoads=list.flatMap(d=>d.sets).filter(s=>muscleOf(s)!=='Cardio'&&num(s.weight_kg)===null);
+  if(unknownLoads.length)improve.push(`${[...new Set(unknownLoads.map(s=>s.exercise))].join(', ')}: no weights/reps logged, so progress can't be tracked yet.`);
+  const todayOpen=list.some(d=>d.date===M.today&&d.kcal===null&&d.prot===null);
+  const unl=elapsed-ns.logged-(todayOpen?1:0);
+  if(unl>0)improve.push(`${unl} day${unl>1?'s':''} without nutrition logged.`);
+  if(w.length<3)improve.push(`${w.length?`Only ${w.length} weigh-in${w.length===1?'':'s'}`:'No weigh-ins yet'}. Aim for 3–7 morning weigh-ins a week for a reliable trend.`);
+  // recovery
+  const r=list.map(d=>d.rec).filter(Boolean);const sl=r.map(x=>num(x.sleep_hours)).filter(x=>x!==null);const so=r.map(x=>num(x.soreness_1to5)).filter(x=>x!==null);const en=r.map(x=>num(x.energy_1to5)).filter(x=>x!==null);
+  if(!r.length)recov.push('No sleep, energy or soreness data logged this week.');
+  if(sl.length)recov.push(`Sleep averaged <b>${f1(avg(sl))} h</b> over ${sl.length} night${sl.length>1?'s':''}${avg(sl)<7?'. Under 7 h limits recovery and muscle gain.':'.'}`);
+  if(en.length)recov.push(`Energy averaged ${f1(avg(en))}/5.`);
+  if(so.length)recov.push(`Soreness averaged ${f1(avg(so))}/5${avg(so)>=4?'. High: keep the rest days between sessions.':'.'}`);
+  const crDays=list.filter(d=>d.date>=cfg.creatineStart);
+  if(crDays.length){const ok=crDays.filter(d=>d.creatine!==null&&d.creatine>=cfg.creatineTarget).length;const lg=crDays.filter(d=>d.creatine!==null).length;
+    recov.push(`Creatine: ${ok} of ${crDays.length} days at ${cfg.creatineTarget} g${lg<crDays.length?` (${crDays.length-lg} not logged)`:''}.`);}
+  if(st.done>=2){const dd=list.filter(d=>d.wstatus==='completed'||d.wstatus==='partial').map(d=>d.date);for(let i=1;i<dd.length;i++)if(diffD(dd[i-1],dd[i])===1){recov.push('Back-to-back training days this week. Keep at least one rest day between full-body sessions.');break}}
+  // recommendations
+  if(ns.avgP!==null&&ns.avgP<tg.prot){const gap=tg.prot-ns.avgP;recs.push(`Close the ${f0(gap)} g protein gap: ${gap>35?'add one scoop of whey (~24 g) and one extra palm of lean meat, chicken or fish daily':'add one scoop of whey (~24 g) daily'}.`)}
+  if(ns.avgK!==null&&ns.avgK<tg.kcal*(1-cfg.tol))recs.push(`Add ~${f0(Math.min(500,Math.round((tg.kcal-ns.avgK)/50)*50))} kcal/day with easy calorie-dense foods (milk in the shake, oats, rice, nuts or olive oil).`);
+  const ws=weightStats();
+  if(ws.weekly!==null&&ws.span>=14){const lo=(ws.cur)*0.0025,hi=(ws.cur)*0.005;
+    if(ws.weekly<lo&&ns.avgK!==null&&ns.avgK>=tg.kcal*(1-cfg.tol))recs.push(`Weight trend is ${sgn(ws.weekly,f1)} kg/week, below the ${f1(lo)}–${f1(hi)} kg lean-gain band, even with calories on target. Raise the calorie target by ~150 kcal (add a Targets row) and reassess in 2 weeks.`);
+    else if(ws.weekly>hi)recs.push(`Weight trend is ${sgn(ws.weekly,f1)} kg/week, above the lean-gain band. Trim ~100–150 kcal/day to limit fat gain.`);
+    else if(ws.weekly>=lo)recs.push('Rate of gain is in the lean-gain band. Keep calories where they are.');}
+  else recs.push('Weigh in most mornings (after the toilet, before food). After 2 weeks the dashboard can judge whether to change calories.');
+  if(mins.some(m=>m>cfg.sessionTarget))recs.push(`To fit ${cfg.sessionTarget} min: 4–5 exercises, 2–3 working sets each, 90–120 s rest on big lifts and 60 s on accessories, with phone and chat between sets kept short.`);
+  if(st.done&&legSets<upSets)recs.push('Start each session with a leg movement (leg press, squat or RDL) for 3 sets, and add calf raises twice a week.');
+  if(st.done&&!mg.Forearms)recs.push('Finish two sessions a week with forearm work: wrist curls, reverse curls or farmer carries, 2–3 sets each.');
+  recs.push('Progression rule: when all sets reach the top of the rep range (e.g. 3 × 10–12), raise the weight one increment next session. On machines, compare only against the same machine.');
+  if(end>=cfg.creatineStart||addD(end,1)>=cfg.creatineStart)recs.push(`Take ${cfg.creatineTarget} g creatine daily (timing doesn't matter) and log it, including rest days.`);
+  const sec=(t,a,cls='')=>a.length?`<h4>${t}</h4><ul class="${cls}">${a.map(L).join('')}</ul>`:'';
+  const partial=end>M.today?`<p class="note" style="margin-top:0">Week in progress: ${elapsed} of 7 days so far.</p>`:'';
+  out.html=`${partial}${sec('Summary',facts)}${sec('What went well',good)}${sec('Needs attention',improve)}${sec('Recovery',recov)}${sec('Plan for next week',recs,'rec')}`;
+  return out;
+}
+function renderCoach(){
+  const weeks=[...new Set(M.days.map(d=>weekStart(d.date)))].sort().reverse();
+  if(!S.week||!weeks.includes(S.week)){const elapsed=diffD(weeks[0],M.today)+1;S.week=elapsed<3&&weeks[1]?weeks[1]:weeks[0]}
+  $('#weekSel').innerHTML=weeks.map(w=>`<option value="${w}" ${w===S.week?'selected':''}>Week of ${fmtD(w)} – ${fmtS(addD(w,6))}</option>`).join('');
+  const r=weekReport(S.week);$('#kpiWeek').innerHTML=r.kpis;$('#reportBox').innerHTML=r.html;
+}
+
+/* ============================================================ RECOVERY */
+function renderRecovery(){
+  const R=rangeDays();const cfg=M.cfg;$('#rangeLbl4').textContent=R.label;
+  const since=M.days.filter(d=>d.date>=cfg.creatineStart);
+  const ok=since.filter(d=>d.creatine!==null&&d.creatine>=cfg.creatineTarget).length, logged=since.filter(d=>d.creatine!==null).length;
+  let crStreak=0;for(let i=since.length-1;i>=0;i--){const d=since[i];if(d.date===M.today&&d.creatine===null)continue;if(d.creatine!==null&&d.creatine>=cfg.creatineTarget)crStreak++;else break}
+  const t=M.byDate[M.today]||{};
+  const started=M.today>=cfg.creatineStart;
+  const restDays=R.list.filter(d=>!(d.wstatus==='completed'||d.wstatus==='partial')).length;
+  const sup=(M.data.supplements||[]).filter(s=>{const d=String(s.date).slice(0,10);return d>=R.from&&d<=R.to});
+  const supDays=new Set(sup.filter(s=>s.taken==='yes').map(s=>String(s.date).slice(0,10))).size;
+  $('#kpiSup').innerHTML=[
+    !started?kpi({label:'Creatine today',value:`Starts ${fmtD(cfg.creatineStart)}`,na:1,foot:`${cfg.creatineTarget} g daily`,status:'none'})
+      :kpi({label:'Creatine today',value:t.creatine===null||t.creatine===undefined?'Not logged yet':f1(t.creatine).replace('.0','')+' g',na:1,foot:`Target ${cfg.creatineTarget} g`,status:t.creatine>=cfg.creatineTarget?'good':'warn'}),
+    kpi({label:'Creatine adherence',value:since.length?pct(ok,since.length):'—',unit:since.length?'%':'',foot:since.length?`${ok} of ${since.length} days since start${logged<since.length?` · ${since.length-logged} not logged`:''}`:'Plan not started',status:!since.length?'none':ok/since.length>=.85?'good':'warn',bar:since.length?pct(ok,since.length):null}),
+    kpi({label:'Creatine streak',value:crStreak,unit:'days',status:crStreak?'good':'none'}),
+    kpi({label:'Supplement days',value:supDays,unit:`/ ${R.list.length}`,foot:'Days with any supplement logged as taken',status:'none'})
+  ].join('');
+  $('#crSub').textContent=started?`Since ${fmtD(cfg.creatineStart)} · target ${cfg.creatineTarget} g/day`:`Plan starts ${fmtD(cfg.creatineStart)} · target ${cfg.creatineTarget} g/day`;
+  // calendar: 5 weeks ending this week
+  const endW=addD(weekStart(M.today),6);const startC=addD(weekStart(M.today),-28);let cal='<div class="cal">';
+  for(let i=0;i<7;i++)cal+=`<div class="hd">${DOW[(6+i)%7].slice(0,2)}</div>`;
+  for(let d=startC;d<=endW;d=addD(d,1)){const x=M.byDate[d];let cls='';const day=dObj(d).getUTCDate();
+    if(d<cfg.creatineStart||d>M.today)cls='pre';else if(x&&x.creatine!==null)cls=x.creatine>=cfg.creatineTarget?'ok':x.creatine===0?'no':'low';
+    cal+=`<div class="${cls}" title="${fmtD(d)}${x&&x.creatine!==null?': '+x.creatine+' g':d>=cfg.creatineStart&&d<=M.today?': not logged':''}">${day}</div>`}
+  $('#crCal').innerHTML=cal+'</div>';
+  $('#supBox').innerHTML=sup.length?`<table class="tbl"><tr><th>Date</th><th>Supplement</th><th class="n">Amount</th><th>Taken</th><th>Notes</th></tr>${sup.slice().sort((a,b)=>String(a.date)<String(b.date)?1:-1).map(s=>`<tr><td>${fmtS(String(s.date).slice(0,10))}</td><td>${esc(s.supplement)}</td><td class="n">${esc(s.amount??'')} ${esc(s.unit||'')}</td><td>${s.taken==='yes'?'<span class="tag good">yes</span>':'<span class="tag">no</span>'}</td><td style="color:var(--muted)">${esc(s.notes||'')}</td></tr>`).join('')}</table>`:'<div class="empty">No supplements logged in this range.</div>';
+  // recovery
+  const recs=R.list.filter(d=>d.rec);const sl=recs.map(d=>num(d.rec.sleep_hours)).filter(x=>x!==null);
+  const en=recs.map(d=>num(d.rec.energy_1to5)).filter(x=>x!==null), so=recs.map(d=>num(d.rec.soreness_1to5)).filter(x=>x!==null);
+  const ah=(M.data.recovery||[]).some(r=>r.source==='apple_health');
+  $('#ahStatus').textContent=ah?'Includes Apple Health data':'Apple Health: not connected (fields are ready for it)';
+  $('#kpiRec').innerHTML=[
+    kpi({label:'Avg sleep',value:sl.length?f1(avg(sl)):'Not logged',na:!sl.length,unit:'h',foot:sl.length?`${sl.length} nights`:'',status:!sl.length?'none':avg(sl)>=7?'good':'warn'}),
+    kpi({label:'Avg energy',value:en.length?f1(avg(en)):'Not logged',na:!en.length,unit:'/ 5',status:!en.length?'none':avg(en)>=3?'good':'warn'}),
+    kpi({label:'Avg soreness',value:so.length?f1(avg(so)):'Not logged',na:!so.length,unit:'/ 5',status:!so.length?'none':avg(so)<=3?'good':'warn'}),
+    kpi({label:'Rest days',value:restDays,unit:`/ ${R.list.length}`,foot:'Days without a completed session',status:'none'})
+  ].join('');
+  if(!sl.length)empty('cSleep','No sleep data yet','Log hours slept in the Log tab or tell ChatGPT.');
+  else chart('cSleep',{data:{labels:R.list.map(d=>fmtS(d.date)),datasets:[barDS('Sleep',R.list.map(d=>d.rec?num(d.rec.sleep_hours):null),R.list.map(d=>d.rec&&num(d.rec.sleep_hours)>=7?C.green:C.amber)),targetDS('7 h',R.list.map(()=>7))]},options:{scales:{x:xAxis(),y:axis({beginAtZero:true,suggestedMax:9})}}});
+  if(!en.length&&!so.length)empty('cFeel','No energy or soreness ratings yet','Rate both 1–5 each day for a recovery trend.');
+  else chart('cFeel',{data:{labels:R.list.map(d=>fmtS(d.date)),datasets:[lineDS('Energy',R.list.map(d=>d.rec?num(d.rec.energy_1to5):null),C.green,{pointRadius:3}),lineDS('Soreness',R.list.map(d=>d.rec?num(d.rec.soreness_1to5):null),C.amber,{pointRadius:3})]},options:{scales:{x:xAxis(),y:axis({min:1,max:5,ticks:{stepSize:1}})}}});
+}
+
+/* ============================================================ LOG */
+function renderLog(){
+  $('#logMode').innerHTML=CAN_SAVE?'Saving here writes straight to your Google Sheet. Saving the same date + item again updates it instead of duplicating.':'Preview mode: saving is disabled because this page is not running from your Apps Script deployment.';
+  $$('.form input[type=date]').forEach(i=>{if(!i.value)i.value=M.today});
+  const lg=M.data.ingest_log||[];
+  $('#ingBox').innerHTML=lg.length?`<table class="tbl"><tr><th>When</th><th>Channel</th><th>Request</th><th class="n">Inserted</th><th class="n">Updated</th><th class="n">Rejected</th><th>Messages</th></tr>${lg.map(r=>`<tr><td>${esc(String(r.received_at||'').replace('T',' ').slice(0,16))}</td><td>${esc(r.channel)}</td><td>${esc(r.request_id)}</td><td class="n">${esc(r.inserted)}</td><td class="n">${esc(r.updated)}</td><td class="n">${r.rejected>0?`<span style="color:var(--amber)">${esc(r.rejected)}</span>`:esc(r.rejected)}</td><td style="color:var(--muted)">${esc(r.messages||'')}</td></tr>`).join('')}</table>`:'<div class="empty">No submissions yet.</div>';
+}
+function formVals(el){const o={};el.querySelectorAll('input,select').forEach(i=>{if(i.name&&i.value!=='')o[i.name]=i.value});return o}
+function send(payload,msgEl,btn){
+  if(!CAN_SAVE){msgEl.className='msg err';msgEl.textContent='Preview mode: open the dashboard from your Apps Script deployment to save.';return}
+  btn&&(btn.disabled=true);msgEl.className='msg';msgEl.textContent='Saving…';
+  payload.request_id=payload.request_id||('dash-'+Date.now());payload.source=payload.source||'dashboard';
+  const done=s=>{const r=typeof s==='string'?JSON.parse(s):s;btn&&(btn.disabled=false);if(r.error){msgEl.className='msg err';msgEl.textContent='Error: '+r.error;return}
+    msgEl.className='msg '+(r.rejected?'err':'ok');msgEl.textContent=(r.duplicate_request?'Already imported. ':'')+`Saved: ${r.inserted} new, ${r.updated} updated${r.rejected?`, ${r.rejected} rejected`:''}.`+(r.messages&&r.messages.length?'\n'+r.messages.join('\n'):'');load(true)};
+  if(REMOTE){const body=Object.assign({},payload,{k:REMOTE.key});delete body.token;fetch(REMOTE.api,{method:'POST',credentials:'omit',body:JSON.stringify(body)}).then(r=>r.json()).then(done).catch(e=>{btn&&(btn.disabled=false);msgEl.className='msg err';msgEl.textContent='Error: '+e.message});return}
+  google.script.run.withSuccessHandler(s=>{const r=JSON.parse(s);btn&&(btn.disabled=false);
+    msgEl.className='msg '+(r.rejected?'err':'ok');msgEl.textContent=(r.duplicate_request?'Already imported. ':'')+`Saved: ${r.inserted} new, ${r.updated} updated${r.rejected?`, ${r.rejected} rejected`:''}.`+(r.messages.length?'\n'+r.messages.join('\n'):'');
+    load(true)}).withFailureHandler(e=>{btn&&(btn.disabled=false);msgEl.className='msg err';msgEl.textContent='Error: '+(e.message||e)}).ingestFromDashboard(JSON.stringify(payload),KEY);
+}
+function bindForms(){
+  $$('.form').forEach(f=>{const btn=f.querySelector('.btn');const msg=f.querySelector('.msg');btn.addEventListener('click',()=>{
+    const v=formVals(f);const kind=f.dataset.f;let p={};
+    if(!v.date){msg.className='msg err';msg.textContent='Date is required.';return}
+    if(kind==='body'){if(!v.value){msg.className='msg err';msg.textContent='Enter a weight.';return}p.body=[{date:v.date,time:v.time,metric:'weight',value:v.value,unit:'kg',conditions:v.conditions,data_quality:'confirmed'}]}
+    if(kind==='nutrition'){if(!v.calories_kcal&&!v.protein_g){msg.className='msg err';msg.textContent='Enter kcal and/or protein.';return}
+      p.nutrition=[{date:v.date,entry_level:v.entry_level,meal:v.entry_level==='day_total'?'Day total':v.meal,item:v.item||(v.entry_level==='day_total'?'All food':v.meal),calories_kcal:v.calories_kcal,protein_g:v.protein_g,data_quality:v.data_quality}]}
+    if(kind==='workout'){p.sessions=[{date:v.date,session_name:v.session_name||'Workout',status:v.status,duration_min:v.duration_min}];
+      if(v.exercise){const sets=(v.sets||'').split(',').map(s=>s.trim()).filter(Boolean);
+        if(!sets.length){msg.className='msg err';msg.textContent='Add sets like 60x10, 70x8.';return}
+        p.sets=sets.map((s,i)=>{const m=s.match(/([\d.]+)\s*(?:kg)?\s*[x×*]\s*(\d+)/i);return m?{date:v.date,session_name:v.session_name||'Workout',exercise:v.exercise,equipment:v.equipment||'Unspecified',muscle_group:v.muscle_group,set_no:i+1,weight_kg:m[1],reps:m[2],data_quality:'confirmed'}:{date:v.date,session_name:v.session_name||'Workout',exercise:v.exercise,equipment:v.equipment||'Unspecified',muscle_group:v.muscle_group,set_no:i+1,notes:s}})}}
+    if(kind==='daily'){if(v.creatine!==undefined||v.whey!==undefined){p.supplements=[];if(v.creatine!==undefined)p.supplements.push({date:v.date,supplement:'Creatine',amount:v.creatine,unit:'g'});if(v.whey!==undefined)p.supplements.push({date:v.date,supplement:'Whey protein',amount:v.whey,unit:'scoop'})}
+      if(v.sleep_hours||v.energy_1to5||v.soreness_1to5)p.recovery=[{date:v.date,sleep_hours:v.sleep_hours,energy_1to5:v.energy_1to5,soreness_1to5:v.soreness_1to5}];
+      if(!p.supplements&&!p.recovery){msg.className='msg err';msg.textContent='Nothing to save.';return}}
+    send(p,msg,btn)})});
+  $('#jsonBtn').addEventListener('click',()=>{const m=$('#jsonMsg');let p;try{p=JSON.parse($('#jsonIn').value)}catch(e){m.className='msg err';m.textContent='Not valid JSON: '+e.message;return}send(p,m,$('#jsonBtn'))});
+}
+
+/* ============================================================ render & events */
+function renderAll(){
+  if(!M)return;
+  $$('#rangeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.r===S.range));
+  $('#customBox').classList.toggle('on',S.range==='custom');
+  const fns={overview:renderOverview,nutrition:renderNutrition,body:renderBody,training:renderTraining,coach:renderCoach,recovery:renderRecovery,log:renderLog};
+  const errs=[];
+  for(const [k,fn] of Object.entries(fns)){try{fn()}catch(e){console.error(e);errs.push(k+': '+e.message)}}
+  $('#banner').classList.toggle('on',!!errs.length);$('#banner').textContent=errs.length?'Render error: '+errs.join(' · '):'';
+  save();
+}
+function init(data){
+  RAW=data;M=buildModel(data);lastLoad=Date.now();
+  $('#loading').style.display='none';
+  const ws=M.weighIns.length?M.weighIns[M.weighIns.length-1]:null;
+  const upd=String(data.meta.generated_at||'').slice(11,16);
+  $('#subtitle').innerHTML=`<span class="live" id="live"><i></i>Updated ${esc(upd)}</span> · Day ${diffD(M.cfg.programStart,M.today)+1} · ${ws?f1(ws.value)+' kg':'≈'+M.cfg.start+' kg'} → ${M.cfg.target} kg`;
+  $('#meta').textContent=`Data from your Google Sheet · refreshed ${String(data.meta.generated_at||'').replace('T',' ').slice(0,16)} (${data.meta.tz}) · v${data.meta.version}${CAN_SAVE?'':' · PREVIEW'}`;
+  const f=$('#from'),t=$('#to');f.min=t.min=M.days[0].date;f.max=t.max=M.today;f.value=S.from||M.days[0].date;t.value=S.to||M.today;
+  renderAll();
+}
+function load(silent){
+  if(REMOTE&&!M){try{const c=JSON.parse(localStorage.getItem('kg78_cache')||'null');if(c&&c.meta){init(c);silent=true}}catch(e){}}
+  if(!silent&&!M){$('#loading').style.display='grid'}
+  if(IS_LIVE){google.script.run.withSuccessHandler(s=>init(JSON.parse(s))).withFailureHandler(e=>{$('#loading').textContent='Could not load data: '+(e.message||e)}).getDashboardData(KEY)}
+  else if(REMOTE){fetch(REMOTE.api+'?action=data&k='+encodeURIComponent(REMOTE.key),{credentials:'omit'}).then(r=>r.json()).then(d=>{if(d&&d.meta){try{localStorage.setItem('kg78_cache',JSON.stringify(d))}catch(e){}init(d)}else $('#loading').textContent='Could not load data: '+((d&&d.error)||'unknown error')}).catch(e=>{if(!M)$('#loading').textContent='Could not load data: '+e.message})}
+  else if(window.__KG78_DATA__)init(window.__KG78_DATA__);
+  else if(window.__KG78_NOKEY)$('#loading').textContent='This device is not set up yet. Open your private Fitness Project link once on this device.';
+  else $('#loading').textContent='No data source. Open this page from your Apps Script deployment.';
+}
+$('#rangeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.range=b.dataset.r;renderAll()});
+$('#from').addEventListener('change',e=>{S.from=e.target.value;S.range='custom';renderAll()});
+$('#to').addEventListener('change',e=>{S.to=e.target.value;S.range='custom';renderAll()});
+$('#granSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.gran=b.dataset.g;renderAll()});
+$('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.getElementById('s-'+b.dataset.s).scrollIntoView({behavior:'smooth',block:'start'})});
+if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){const id=en.target.id.slice(2);$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id));const nb=$(`#nav button[data-s="${id}"]`);nb&&nb.scrollIntoView({block:'nearest',inline:'nearest'})}})},{rootMargin:'-130px 0px -60% 0px'});$$('main section').forEach(s=>io.observe(s))}
+// always fresh: reload every 2 minutes while visible, and whenever the page comes back into view
+let lastLoad=0;
+setInterval(()=>{if(CAN_SAVE&&document.visibilityState==='visible')load(true)},120000);
+document.addEventListener('visibilitychange',()=>{if(CAN_SAVE&&document.visibilityState==='visible'&&Date.now()-lastLoad>30000)load(true)});
+setInterval(()=>{const el=$('#live');if(el&&lastLoad)el.classList.toggle('stale',Date.now()-lastLoad>300000)},30000);
+$('#exSel').addEventListener('change',e=>{S.exercise=e.target.value;renderAll()});
+$('#weekSel').addEventListener('change',e=>{S.week=e.target.value;renderAll()});
+$('#mealDate').addEventListener('change',e=>{S.mealDate=e.target.value;renderMeals()});
+$('#refresh').addEventListener('click',()=>load(true));
+bindForms();
+window.__kg78={get model(){return M},render:renderAll,state:S,weekReport};
+load();
+})();
+</script>
+</body>
+</html>
