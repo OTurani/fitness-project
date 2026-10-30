@@ -26,7 +26,13 @@
   if(cached&&cached.indexOf('<html')>-1)show(cached);
   fetch(API+'?action=app&k='+encodeURIComponent(k),{credentials:'omit'}).then(function(r){return r.text()}).then(function(h){
     if(h.indexOf('<html')<0)throw new Error(h.slice(0,80));
-    if(h!==cached)put('fp_app',h);
+    if(h!==cached){
+      put('fp_app',h);
+      // a newer version arrived while an older saved copy is on screen: switch to it now (once)
+      if(shown){var r=null;try{r=sessionStorage.getItem('fp_r')}catch(e){}
+        if(get('fp_app')===h&&!r){try{sessionStorage.setItem('fp_r','1')}catch(e){}location.reload();return}
+        show(h);return}
+    }
     if(!shown)show(h);
   }).catch(function(e){if(!shown)el.textContent='Could not load the dashboard ('+e.message+'). Check your connection and reopen.'});
 })();
