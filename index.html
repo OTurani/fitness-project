@@ -23,7 +23,8 @@
   var shown=false,cached=get('fp_app');
   function show(h){shown=true;document.open();document.write(h);document.close()}
   // cached copy opens instantly; a newer version is saved and used on the next launch
-  if(cached&&cached.indexOf('<html')>-1)show(cached);
+  // (deferred one tick so it replaces this page instead of being added below it)
+  if(cached&&cached.indexOf('<html')>-1){shown=true;setTimeout(function(){show(cached)},0)}
   fetch(API+'?action=app&k='+encodeURIComponent(k),{credentials:'omit'}).then(function(r){return r.text()}).then(function(h){
     if(h.indexOf('<html')<0)throw new Error(h.slice(0,80));
     if(h!==cached){
